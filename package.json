@@ -1,0 +1,17 @@
+{
+  "name": "hubstaff-mimick",
+  "private": true,
+  "scripts": {
+    "dev:web": "turbo run dev --filter=@hubstaff/web",
+    "dev:desktop": "turbo run dev --filter=@hubstaff/desktop",
+    "build": "turbo run build",
+    "build:web": "turbo run build --filter=@hubstaff/web",
+    "build:desktop": "turbo run build --filter=@hubstaff/desktop",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "^2.1.0",
+    "typescript": "^5.5.0"
+  },
+  "packageManager": "pnpm@9.9.0"
+}
