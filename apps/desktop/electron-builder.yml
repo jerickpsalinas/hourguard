@@ -1,0 +1,18 @@
+appId: com.hubstaff-mimick.desktop
+productName: Hubstaff Mimick
+directories:
+  output: release
+files:
+  - dist/**/*
+win:
+  target:
+    - nsis
+  icon: resources/icon.png
+mac:
+  target:
+    - dmg
+  icon: resources/icon.png
+linux:
+  target:
+    - AppImage
+  icon: resources/icon.png
