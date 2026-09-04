@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@hubstaff/shared'],
+  transpilePackages: ['@hourguard/shared'],
 };
 
 module.exports = nextConfig;

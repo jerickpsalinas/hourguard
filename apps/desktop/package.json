@@ -1,5 +1,5 @@
 {
-  "name": "@hubstaff/desktop",
+  "name": "@hourguard/desktop",
   "version": "0.1.0",
   "private": true,
   "main": "dist/main/index.js",
@@ -10,7 +10,7 @@
     "package": "electron-builder"
   },
   "dependencies": {
-    "@hubstaff/shared": "workspace:*",
+    "@hourguard/shared": "workspace:*",
     "@supabase/supabase-js": "^2.45.0",
     "better-sqlite3": "^11.2.0",
     "uiohook-napi": "^1.5.4"

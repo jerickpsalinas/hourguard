@@ -3,7 +3,7 @@ import { safeStorage } from 'electron';
 import Database from 'better-sqlite3';
 import { join } from 'path';
 import { app } from 'electron';
-import type { Database as DbTypes } from '@hubstaff/shared';
+import type { Database as DbTypes } from '@hourguard/shared';
 
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';

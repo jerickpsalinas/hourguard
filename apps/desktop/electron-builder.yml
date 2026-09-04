@@ -1,4 +1,4 @@
-appId: com.hubstaff-mimick.desktop
+appId: com.hourguard.desktop
 productName: Hubstaff Mimick
 directories:
   output: release

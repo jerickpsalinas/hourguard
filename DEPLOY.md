@@ -1,92 +1,34 @@
-# Deployment Guide — Hostinger VPS
+# Deployment Guide — Vercel (web) + Hostinger VPS (legacy option)
+
+Hourguard's web dashboard ships to Vercel and authenticates against the shared `hirejps-portal` Supabase project. The Electron desktop tracker builds locally and is distributed as installers.
 
 ## Prerequisites
 
-- Hostinger VPS (KVM 1 or higher)
-- Domain pointing to VPS IP
-- Supabase project (free tier works)
+- Vercel account linked to GitHub
+- Domain: `hourguard.hirejps.com` (subdomain of hirejps.com)
+- Access to the `hirejps-portal` Supabase project (URL + anon key)
+- (For legacy VPS deployment) Hostinger VPS with Node.js 20 and pnpm
 
-## 1. Server Setup
+## 1. Vercel Deploy (web dashboard)
 
-```bash
-# SSH into VPS
-ssh root@your-vps-ip
+1. In the Vercel dashboard: **Add New Project** → import `jerickpsalinas/hourguard`
+2. **Root Directory:** `apps/web`
+3. **Framework Preset:** Next.js
+4. **Build Command:** `pnpm --filter @hourguard/web build`
+5. **Install Command:** `pnpm install`
+6. Environment Variables (from hirejps-portal → Settings → API):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `SUPABASE_SERVICE_ROLE_KEY`
+7. **Add domain:** `hourguard.hirejps.com` (Vercel provides the DNS record — add it to the hirejps.com DNS)
 
-# Install Node.js 20
-curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
-source ~/.bashrc
-nvm install 20
+## 2. Supabase (already done)
 
-# Install pnpm
-npm install -g pnpm
+The schema lives inside `hirejps-portal`. Migration `supabase/migrations/002_hirejps_portal_adapted.sql` was run there and creates the `hg_*` tables plus RLS. Do NOT run `001_initial_schema.sql` — that is the original standalone schema and would collide.
 
-# Install PM2
-npm install -g pm2
+Create a Storage bucket in `hirejps-portal` called `screenshots` (private) for the desktop app's screenshot uploads.
 
-# Install Nginx
-apt update && apt install -y nginx certbot python3-certbot-nginx
-```
-
-## 2. Deploy Web Dashboard
-
-```bash
-# Clone repo
-git clone https://github.com/jerickpsalinas/hubstaff-mimick.git
-cd hubstaff-mimick
-
-# Install dependencies
-pnpm install
-
-# Create .env
-cp .env.example .env
-nano .env  # Fill in Supabase credentials
-
-# Build
-pnpm build:web
-
-# Start with PM2
-pm2 start "pnpm --filter @hubstaff/web start" --name hubstaff-web
-pm2 save
-pm2 startup
-```
-
-## 3. Nginx + SSL
-
-```nginx
-# /etc/nginx/sites-available/hubstaff
-server {
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-```bash
-ln -s /etc/nginx/sites-available/hubstaff /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
-
-# SSL
-certbot --nginx -d your-domain.com
-```
-
-## 4. Supabase Setup
-
-1. Create project at supabase.com
-2. Go to SQL Editor, paste `supabase/migrations/001_initial_schema.sql`, run it
-3. Create a Storage bucket called `screenshots` (private)
-4. Copy project URL and anon key to `.env`
-
-## 5. Desktop App Installers
+## 3. Desktop App Installers
 
 ```bash
 # On a dev machine with the repo:
@@ -99,14 +41,46 @@ pnpm package
 # - Linux: .AppImage
 ```
 
-Host the installer files on the VPS as static files, or as GitHub releases.
+Host the installer files as GitHub Releases on `jerickpsalinas/hourguard` and link them from the web dashboard Downloads page.
 
-## 6. Updates
+## 4. Updates
+
+Web dashboard: `git push origin main` → Vercel auto-deploys.
+Desktop app: bump version in `apps/desktop/package.json`, `pnpm package`, upload new installer to GitHub Releases.
+
+---
+
+## Legacy — Hostinger VPS Option
+
+Only use if you want to self-host instead of Vercel.
 
 ```bash
-cd hubstaff-mimick
-git pull
+# SSH into VPS
+ssh root@your-vps-ip
+
+# Install Node.js 20, pnpm, PM2, Nginx
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+source ~/.bashrc
+nvm install 20
+npm install -g pnpm pm2
+apt update && apt install -y nginx certbot python3-certbot-nginx
+
+# Deploy
+git clone https://github.com/jerickpsalinas/hourguard.git
+cd hourguard
 pnpm install
+cp .env.example .env  # Fill in hirejps-portal credentials
 pnpm build:web
-pm2 restart hubstaff-web
+pm2 start "pnpm --filter @hourguard/web start" --name hourguard-web
+pm2 save
+pm2 startup
+
+# Nginx (/etc/nginx/sites-available/hourguard)
+# server { server_name hourguard.hirejps.com; location / { proxy_pass http://127.0.0.1:3000; ... } }
+ln -s /etc/nginx/sites-available/hourguard /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+certbot --nginx -d hourguard.hirejps.com
+
+# Updates
+cd hourguard && git pull && pnpm install && pnpm build:web && pm2 restart hourguard-web
 ```

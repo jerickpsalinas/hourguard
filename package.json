@@ -1,12 +1,12 @@
 {
-  "name": "hubstaff-mimick",
+  "name": "hourguard",
   "private": true,
   "scripts": {
-    "dev:web": "turbo run dev --filter=@hubstaff/web",
-    "dev:desktop": "turbo run dev --filter=@hubstaff/desktop",
+    "dev:web": "turbo run dev --filter=@hourguard/web",
+    "dev:desktop": "turbo run dev --filter=@hourguard/desktop",
     "build": "turbo run build",
-    "build:web": "turbo run build --filter=@hubstaff/web",
-    "build:desktop": "turbo run build --filter=@hubstaff/desktop",
+    "build:web": "turbo run build --filter=@hourguard/web",
+    "build:desktop": "turbo run build --filter=@hourguard/desktop",
     "lint": "turbo run lint"
   },
   "devDependencies": {

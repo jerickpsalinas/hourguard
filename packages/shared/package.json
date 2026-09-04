@@ -1,5 +1,5 @@
 {
-  "name": "@hubstaff/shared",
+  "name": "@hourguard/shared",
   "version": "0.1.0",
   "private": true,
   "main": "./src/index.ts",
