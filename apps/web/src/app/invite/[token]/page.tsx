@@ -22,44 +22,29 @@ export default function InvitePage() {
 
   useEffect(() => {
     (async () => {
-      const { data: inv, error: invErr } = await supabase
-        .from('hg_invites')
-        .select('*')
-        .eq('token', token)
-        .single();
-
-      if (invErr || !inv) {
+      // hg_invites isn't readable anonymously under RLS, so validation runs
+      // server-side with the service role. See /api/auth/invite/[token].
+      let res: Response;
+      try {
+        res = await fetch(`/api/auth/invite/${token}`);
+      } catch {
         setStep('invalid');
-        setError('This invite link is invalid or has already been used.');
+        setError('Could not verify this invite. Please try again.');
         setLoading(false);
         return;
       }
 
-      if (inv.accepted) {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.valid) {
         setStep('invalid');
-        setError('This invite has already been accepted.');
+        setError(data?.reason ?? 'This invite link is invalid or has already been used.');
         setLoading(false);
         return;
       }
 
-      if (new Date(inv.expires_at) < new Date()) {
-        setStep('invalid');
-        setError('This invite has expired. Ask your administrator for a new one.');
-        setLoading(false);
-        return;
-      }
-
-      setInvite(inv);
-      if (inv.email) setEmail(inv.email);
-
-      const { data: org } = await supabase
-        .from('organizations')
-        .select('name')
-        .eq('id', inv.organization_id)
-        .single();
-
-      if (org) setOrgName(org.name);
-
+      setInvite({ email: data.email ?? null, role: data.role });
+      if (data.email) setEmail(data.email);
+      setOrgName(data.orgName ?? '');
       setStep('form');
       setLoading(false);
     })();
@@ -70,63 +55,37 @@ export default function InvitePage() {
     setError('');
     setSubmitting(true);
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (authError || !authData.user) {
-      setError(authError?.message ?? 'Signup failed');
+    // Acceptance (auth user + membership + marking the invite used) runs
+    // server-side with the service role. See /api/auth/invite/[token].
+    let res: Response;
+    try {
+      res = await fetch(`/api/auth/invite/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, email, password }),
+      });
+    } catch {
+      setError('Network error. Please try again.');
       setSubmitting(false);
       return;
     }
 
-    // Profile inserts below are RLS-guarded and require a session. signUp only
-    // returns one when email confirmation is off; otherwise establish it now.
-    if (!authData.session) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        setError('Account created. Please confirm your email, then reopen this invite link to join.');
-        setSubmitting(false);
-        return;
-      }
-    }
-
-    const { error: portalError } = await supabase.from('portal_users').insert({
-      auth_user_id: authData.user.id,
-      organization_id: invite.organization_id,
-      full_name: fullName,
-      email,
-      role: invite.role,
-    });
-
-    if (portalError) {
-      setError('Failed to create portal profile');
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(result?.error ?? 'Failed to accept invite. Please try again.');
       setSubmitting(false);
       return;
     }
 
-    const { error: memberError } = await supabase.from('hg_members').insert({
-      auth_user_id: authData.user.id,
-      organization_id: invite.organization_id,
-      full_name: fullName,
-      email,
-      role: invite.role,
-    });
-
-    if (memberError) {
-      setError('Failed to create member profile. You may already have an account.');
-      setSubmitting(false);
+    // Membership provisioned — sign in to establish the browser session.
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    setSubmitting(false);
+    if (signInError) {
+      setStep('done');
       return;
     }
-
-    await supabase
-      .from('hg_invites')
-      .update({ accepted: true })
-      .eq('id', invite.id);
 
     setStep('done');
-    setSubmitting(false);
   }
 
   const inputClass = 'w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder-white/40 focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';

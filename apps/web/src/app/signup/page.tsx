@@ -19,67 +19,35 @@ export default function SignupPage() {
     setError('');
     setLoading(true);
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (authError || !authData.user) {
-      setError(authError?.message ?? 'Signup failed');
+    // Provisioning (auth user + org + owner membership) runs server-side with
+    // the service role — a brand-new user has no membership yet, so RLS can't
+    // let the browser create these rows. See /api/auth/signup.
+    let res: Response;
+    try {
+      res = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, orgName, email, password }),
+      });
+    } catch {
+      setError('Network error. Please try again.');
       setLoading(false);
       return;
     }
 
-    // The following inserts are RLS-guarded and need an authenticated session.
-    // signUp only returns one when email confirmation is disabled; otherwise
-    // establish it now, or tell the user to confirm their email first.
-    if (!authData.session) {
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-      if (signInError) {
-        setError('Account created. Please confirm your email, then sign in to finish setting up your organization.');
-        setLoading(false);
-        return;
-      }
-    }
-
-    const { data: org, error: orgError } = await supabase
-      .from('organizations')
-      .insert({ name: orgName, access_type: ['hourguard'] })
-      .select('id')
-      .single();
-
-    if (orgError || !org) {
-      setError('Failed to create organization');
+    const result = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setError(result?.error ?? 'Signup failed. Please try again.');
       setLoading(false);
       return;
     }
 
-    const { error: portalError } = await supabase.from('portal_users').insert({
-      auth_user_id: authData.user.id,
-      organization_id: org.id,
-      full_name: fullName,
-      email,
-      role: 'owner',
-    });
-
-    if (portalError) {
-      setError('Failed to create portal profile');
-      setLoading(false);
-      return;
-    }
-
-    const { error: memberError } = await supabase.from('hg_members').insert({
-      auth_user_id: authData.user.id,
-      organization_id: org.id,
-      full_name: fullName,
-      email,
-      role: 'owner',
-    });
-
+    // Account provisioned — sign in to establish the browser session.
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-
-    if (memberError) {
-      setError('Failed to create member profile');
+    if (signInError) {
+      setError('Account created. Please sign in to continue.');
+      router.push('/login');
       return;
     }
 

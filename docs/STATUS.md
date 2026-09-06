@@ -38,12 +38,23 @@ Snapshot of what's done and what still needs a live environment. Keep this curre
 
 ## Needs a live environment (do on computer)
 
-1. **RLS bootstrap for signup & invite acceptance** — a brand-new user has no
-   membership yet, but `002_...sql` policies only let existing owners/managers
-   insert `hg_members`, and the public invite page reads `hg_invites`
-   anonymously with no policy permitting it. Both flows likely fail against
-   live RLS. Fix: server-side provisioning (API route using the service client)
-   or add bootstrap RLS policies. Must be tested against the real Supabase DB.
+1. **RLS bootstrap for signup & invite acceptance** — ✅ **fixed in code.**
+   Provisioning now runs server-side with the service role, so the RLS
+   chicken-and-egg (a brand-new user has no membership, so can't insert
+   org/portal_users/hg_members, and can't read `hg_invites` anonymously) no
+   longer applies. New routes:
+   - `POST /api/auth/signup` — creates the auth user (email pre-confirmed),
+     organization (`access_type: ['hourguard']`), `portal_users`, and the owner
+     `hg_members` row, with rollback of the partial state on any failure.
+   - `GET /api/auth/invite/[token]` — validates an invite (exists / not
+     accepted / not expired) and returns only org name, role, and target email.
+   - `POST /api/auth/invite/[token]` — creates the auth user + membership at the
+     invite's role, enforces the email match when the invite is addressed, and
+     marks the invite accepted only after the membership exists.
+   The `signup` and `invite/[token]` pages now call these and then sign in.
+   Still worth a **live smoke test** against the real Supabase DB (confirm
+   `portal_users` has `email`/`role` columns and the service role key is set in
+   the deploy env), but the flows no longer depend on RLS to succeed.
 
 2. **Screenshot retention policy** — screenshots accumulate forever, growing
    storage/hosting cost without bound. Add auto-deletion after 30–90 days
