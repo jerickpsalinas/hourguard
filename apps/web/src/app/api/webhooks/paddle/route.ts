@@ -149,9 +149,14 @@ export async function POST(request: NextRequest) {
 
   // Recovery link lets the buyer set their password. Delivery depends on your
   // Supabase SMTP config; the link is returned/logged so it can be emailed.
+  // Point the set-password link at Hourguard explicitly. The Supabase project
+  // is shared across the portal products, so its default Site URL may not be
+  // this app — send buyers to our own /reset-password when APP_URL is set.
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.APP_URL;
   const { data: linkData } = await supabase.auth.admin.generateLink({
     type: 'recovery',
     email: buyer.email,
+    ...(appUrl ? { options: { redirectTo: `${appUrl}/reset-password` } } : {}),
   });
   setPasswordLink = linkData?.properties?.action_link ?? null;
 

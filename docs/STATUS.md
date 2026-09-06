@@ -67,6 +67,9 @@ Snapshot of what's done and what still needs a live environment. Keep this curre
    against real data.
 
 3. **Deployment** — Vercel deploy to hourguard.hirejps.com; set env vars.
+   Step-by-step runbook ready at **`docs/DEPLOY.md`** (import settings, the full
+   env-var table, domain + DNS, the required Supabase Auth redirect allowlist,
+   cron verification). Dashboard/DNS actions still have to be done on a computer.
 
 4. **Desktop distribution** — code signing (Apple/Windows certs), build
    installers, host them, and wire the `/download` page links.
