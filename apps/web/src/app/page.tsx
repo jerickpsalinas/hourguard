@@ -120,7 +120,7 @@ export default async function Home() {
       </section>
 
       <footer className="border-t border-white/[0.08] px-6 py-8 text-center">
-        <p className="text-xs text-white/30 font-mono uppercase tracking-wider">// Hourguard — a HireJPS Store product</p>
+        <p className="text-xs text-white/55 font-mono uppercase tracking-wider">// Hourguard — a HireJPS Store product</p>
       </footer>
     </div>
   );
@@ -148,17 +148,17 @@ function PricingSection() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
         {/* The usual way */}
         <div className="glass-card p-7 opacity-80">
-          <p className="text-xs font-mono uppercase tracking-wider text-white/40 mb-2">// the usual way</p>
+          <p className="text-xs font-mono uppercase tracking-wider text-white/60 mb-2">// the usual way</p>
           <h3 className="font-display font-semibold text-lg mb-4">Per-seat subscriptions</h3>
           <p className="text-3xl font-display font-bold text-white/70">
-            {money(competitorPerSeatMonthly)}<span className="text-base font-normal text-white/40"> / employee / month</span>
+            {money(competitorPerSeatMonthly)}<span className="text-base font-normal text-white/60"> / employee / month</span>
           </p>
           <ul className="mt-5 space-y-2 text-sm text-white/50">
             <li className="flex items-start gap-2"><Cross /> Billed every month, forever</li>
             <li className="flex items-start gap-2"><Cross /> Costs more as your team grows</li>
             <li className="flex items-start gap-2"><Cross /> Stop paying, lose access</li>
           </ul>
-          <p className="mt-5 text-sm text-white/40">
+          <p className="mt-5 text-sm text-white/60">
             A team of {exampleTeamSize} ≈ <span className="text-white/60 font-medium">{money(competitorYear1)}/year</span>, every year.
           </p>
         </div>
@@ -171,17 +171,17 @@ function PricingSection() {
           <p className="text-xs font-mono uppercase tracking-wider text-brand mb-2">// the hourguard way</p>
           <h3 className="font-display font-semibold text-lg mb-4">One-time license</h3>
           <p className="text-3xl font-display font-bold">
-            {money(licenseOnce)}<span className="text-base font-normal text-white/40"> once</span>
+            {money(licenseOnce)}<span className="text-base font-normal text-white/60"> once</span>
           </p>
           <p className="mt-1 text-sm text-white/50">
-            + {money(hostingYearly)}/year hosting <span className="text-white/30">(infra, storage, backups, updates)</span>
+            + {money(hostingYearly)}/year hosting <span className="text-white/55">(infra, storage, backups, updates)</span>
           </p>
           <ul className="mt-5 space-y-2 text-sm text-white/60">
             <li className="flex items-start gap-2"><Check /> Unlimited employees — no per-seat fees</li>
             <li className="flex items-start gap-2"><Check /> Pay once, keep your license</li>
             <li className="flex items-start gap-2"><Check /> Predictable, flat yearly hosting</li>
           </ul>
-          <p className="mt-5 text-sm text-white/40">
+          <p className="mt-5 text-sm text-white/60">
             Same team of {exampleTeamSize}: <span className="text-white/70 font-medium">{money(hourguardYear1)}</span> year one, then just <span className="text-white/70 font-medium">{money(hostingYearly)}/year</span>.
           </p>
         </div>
@@ -191,7 +191,7 @@ function PricingSection() {
       <div className="mt-4 glass-card p-6 text-center border-brand/20">
         <p className="text-sm text-white/60">
           Over 5 years, a {exampleTeamSize}-person team pays about{' '}
-          <span className="text-white/40 line-through">{money(competitor5yr)}</span> elsewhere vs{' '}
+          <span className="text-white/60 line-through">{money(competitor5yr)}</span> elsewhere vs{' '}
           <span className="text-brand font-display font-bold">{money(hourguard5yr)}</span> with Hourguard —{' '}
           <span className="font-display font-bold">save ~{savingsPct}%</span>.
         </p>
@@ -210,7 +210,7 @@ function Check() {
 
 function Cross() {
   return (
-    <svg className="w-4 h-4 text-white/30 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg className="w-4 h-4 text-white/55 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
     </svg>
   );

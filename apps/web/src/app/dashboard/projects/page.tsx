@@ -57,10 +57,10 @@ export default function ProjectsPage() {
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Projects</h1>
-      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// manage projects</p>
+      <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// manage projects</p>
       {isAdmin && (
         <form onSubmit={addProject} className="flex gap-3 mb-6">
-          <input type="text" placeholder="New project name" value={newName} onChange={(e) => setNewName(e.target.value)} className={inputClass} />
+          <input type="text" placeholder="New project name" aria-label="New project name" value={newName} onChange={(e) => setNewName(e.target.value)} className={inputClass} />
           <button type="submit" className="btn-brand px-4 py-2.5 text-sm">Add Project</button>
         </form>
       )}
@@ -78,12 +78,12 @@ export default function ProjectsPage() {
             <div key={p.id} className="flex items-center justify-between glass-card p-4">
               <div>
                 <p className="font-medium">{p.name}</p>
-                <p className="text-xs text-white/40">{p.is_active ? 'Active' : 'Archived'}</p>
+                <p className="text-xs text-white/60">{p.is_active ? 'Active' : 'Archived'}</p>
               </div>
               {isAdmin && (
                 <button
                   onClick={() => toggleProject(p.id, p.is_active)}
-                  className="text-sm text-white/40 hover:text-brand transition-colors"
+                  className="text-sm text-white/60 hover:text-brand transition-colors"
                 >
                   {p.is_active ? 'Archive' : 'Restore'}
                 </button>

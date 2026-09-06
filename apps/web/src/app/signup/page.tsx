@@ -110,7 +110,7 @@ export default function SignupPage() {
             {loading ? 'Creating...' : 'Create Account'}
           </button>
           {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-          <p className="text-sm text-white/40 text-center">
+          <p className="text-sm text-white/60 text-center">
             Already have an account? <a href="/login" className="text-brand hover:underline">Sign in</a>
           </p>
         </form>

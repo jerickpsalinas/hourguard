@@ -62,20 +62,30 @@ export default function ScreenshotsPage() {
   }, [member, selectedDate, loadPage]);
 
   const closeModal = useCallback(() => setExpandedUrl(null), []);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!expandedUrl) return;
+    // Move focus into the dialog and keep it there; restore it on close.
+    prevFocusRef.current = document.activeElement as HTMLElement;
+    closeBtnRef.current?.focus();
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeModal();
+      // Only the close button is focusable, so keep focus pinned to it.
+      if (e.key === 'Tab') { e.preventDefault(); closeBtnRef.current?.focus(); }
     };
     window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      prevFocusRef.current?.focus?.();
+    };
   }, [expandedUrl, closeModal]);
 
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Screenshots</h1>
-      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// activity captures</p>
+      <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// activity captures</p>
       <input
         type="date"
         value={selectedDate}
@@ -114,14 +124,14 @@ export default function ScreenshotsPage() {
                 onClick={() => setExpandedUrl(ss.url)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter') setExpandedUrl(ss.url); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setExpandedUrl(ss.url); } }}
               >
                 {ss.url && (
                   <img src={ss.url} alt={`Screenshot by ${memberName} at ${time}`} className="w-full aspect-video object-cover" />
                 )}
                 <div className="p-2">
                   <p className="text-xs font-medium">{memberName}</p>
-                  <p className="text-xs text-white/40">
+                  <p className="text-xs text-white/60">
                     {time} — {ss.activity_percent}%
                   </p>
                 </div>
@@ -152,6 +162,7 @@ export default function ScreenshotsPage() {
           aria-label="Expanded screenshot"
         >
           <button
+            ref={closeBtnRef}
             onClick={closeModal}
             aria-label="Close"
             className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white transition-colors"

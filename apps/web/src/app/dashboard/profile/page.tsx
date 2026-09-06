@@ -52,7 +52,7 @@ export default function ProfilePage() {
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Profile</h1>
-      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// your account</p>
+      <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// your account</p>
 
       <form onSubmit={saveProfile} className="glass-card p-6 max-w-md space-y-4">
         <div>
@@ -70,7 +70,7 @@ export default function ProfilePage() {
         <div>
           <label className="block text-sm text-white/50 mb-1.5">Email</label>
           <input type="email" value={member?.email ?? ''} disabled className={inputClass} />
-          <p className="mt-1 text-xs text-white/30">Email is managed by your HireJPS account and can&apos;t be changed here.</p>
+          <p className="mt-1 text-xs text-white/55">Email is managed by your HireJPS account and can&apos;t be changed here.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4">

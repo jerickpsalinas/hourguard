@@ -115,21 +115,21 @@ export default function InvoicesPage() {
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Invoices</h1>
-      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// billing</p>
+      <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// billing</p>
 
       <form onSubmit={generateInvoice} className="mb-8 glass-card p-6 space-y-4">
         <h2 className="font-display font-semibold">Generate Invoice</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input type="text" placeholder="Invoice title" value={title} onChange={(e) => setTitle(e.target.value)} className={`sm:col-span-2 ${inputClass}`} />
-          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={inputClass}>
+          <input type="text" placeholder="Invoice title" aria-label="Invoice title" value={title} onChange={(e) => setTitle(e.target.value)} className={`sm:col-span-2 ${inputClass}`} />
+          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={inputClass} aria-label="Project">
             <option value="">All projects</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
-          <input type="number" placeholder="Hourly rate" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} className={inputClass} min="0" step="0.01" required />
-          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={inputClass} required />
-          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={inputClass} required />
+          <input type="number" placeholder="Hourly rate" aria-label="Hourly rate" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} className={inputClass} min="0" step="0.01" required />
+          <input type="date" aria-label="From date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={inputClass} required />
+          <input type="date" aria-label="To date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={inputClass} required />
         </div>
         <button type="submit" disabled={generating} className="btn-brand px-4 py-2.5 text-sm">
           {generating ? 'Generating...' : 'Generate Invoice'}
@@ -144,15 +144,15 @@ export default function InvoicesPage() {
       {!loading && invoices.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="glass-card p-4">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Total Invoiced</p>
+            <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Total Invoiced</p>
             <p className="text-xl font-display font-bold">{formatCurrency(invoices.reduce((s, i) => s + (i.total_amount ?? 0), 0), invoices[0]?.currency)}</p>
           </div>
           <div className="glass-card p-4">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Drafts</p>
+            <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Drafts</p>
             <p className="text-xl font-display font-bold text-yellow-400">{invoices.filter((i) => i.status === 'draft').length}</p>
           </div>
           <div className="glass-card p-4">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Finalized</p>
+            <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Finalized</p>
             <p className="text-xl font-display font-bold text-green-400">{invoices.filter((i) => i.status === 'finalized').length}</p>
           </div>
         </div>
@@ -172,13 +172,13 @@ export default function InvoicesPage() {
             <Link key={inv.id} href={`/dashboard/invoices/${inv.id}`} className="flex items-center justify-between glass-card p-4 hover:border-white/20 transition-colors">
               <div>
                 <p className="font-medium">{inv.title}</p>
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-white/60">
                   {inv.from_date} — {inv.to_date} | {(inv as any).hg_projects?.name ?? 'All projects'}
                 </p>
               </div>
               <div className="text-right">
                 <p className="font-display font-semibold">{formatCurrency(inv.total_amount, inv.currency)}</p>
-                <p className="text-xs text-white/40">{inv.total_hours}h @ {formatCurrency(inv.hourly_rate, inv.currency)}/h</p>
+                <p className="text-xs text-white/60">{inv.total_hours}h @ {formatCurrency(inv.hourly_rate, inv.currency)}/h</p>
                 <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs ${inv.status === 'finalized' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
                   {inv.status}
                 </span>

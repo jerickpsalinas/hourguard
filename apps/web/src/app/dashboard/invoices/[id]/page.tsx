@@ -54,13 +54,13 @@ export default function InvoiceDetailPage() {
   const revertToDraft = () => setStatus('draft');
 
   if (loading) {
-    return <p className="text-white/40">Loading...</p>;
+    return <p className="text-white/60">Loading...</p>;
   }
 
   if (!invoice) {
     return (
       <div>
-        <p className="text-white/40 mb-4">Invoice not found.</p>
+        <p className="text-white/60 mb-4">Invoice not found.</p>
         <Link href="/dashboard/invoices" className="text-brand hover:underline text-sm">← Back to invoices</Link>
       </div>
     );
@@ -70,7 +70,7 @@ export default function InvoiceDetailPage() {
     <div>
       {/* Screen-only toolbar */}
       <div className="flex flex-wrap items-center gap-3 mb-6 print:hidden">
-        <button onClick={() => router.push('/dashboard/invoices')} className="text-sm text-white/40 hover:text-white transition-colors">
+        <button onClick={() => router.push('/dashboard/invoices')} className="text-sm text-white/60 hover:text-white transition-colors">
           ← Back
         </button>
         <div className="ml-auto flex items-center gap-3">
@@ -104,10 +104,10 @@ export default function InvoiceDetailPage() {
         <div className="flex items-start justify-between mb-8">
           <div>
             <h1 className="text-2xl font-display font-bold">{orgName || 'Invoice'}</h1>
-            <p className="text-sm text-white/40 print:text-gray-500">via Hourguard by HireJPS</p>
+            <p className="text-sm text-white/60 print:text-gray-500">via Hourguard by HireJPS</p>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wider text-white/40 print:text-gray-500">Invoice</p>
+            <p className="text-xs uppercase tracking-wider text-white/60 print:text-gray-500">Invoice</p>
             <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs capitalize ${invoice.status === 'finalized' ? 'bg-green-500/10 text-green-400 border border-green-500/20 print:bg-green-100 print:text-green-700 print:border-green-300' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 print:bg-yellow-100 print:text-yellow-700 print:border-yellow-300'}`}>
               {invoice.status}
             </span>
@@ -123,10 +123,10 @@ export default function InvoiceDetailPage() {
         <table className="w-full text-sm mb-6">
           <thead>
             <tr className="border-b border-white/[0.1] print:border-gray-300">
-              <th className="text-left py-2 text-white/40 print:text-gray-500 font-medium text-xs uppercase tracking-wider">Description</th>
-              <th className="text-right py-2 text-white/40 print:text-gray-500 font-medium text-xs uppercase tracking-wider">Hours</th>
-              <th className="text-right py-2 text-white/40 print:text-gray-500 font-medium text-xs uppercase tracking-wider">Rate</th>
-              <th className="text-right py-2 text-white/40 print:text-gray-500 font-medium text-xs uppercase tracking-wider">Amount</th>
+              <th scope="col" className="text-left py-2 text-white/60 print:text-gray-500 font-medium text-xs uppercase tracking-wider">Description</th>
+              <th scope="col" className="text-right py-2 text-white/60 print:text-gray-500 font-medium text-xs uppercase tracking-wider">Hours</th>
+              <th scope="col" className="text-right py-2 text-white/60 print:text-gray-500 font-medium text-xs uppercase tracking-wider">Rate</th>
+              <th scope="col" className="text-right py-2 text-white/60 print:text-gray-500 font-medium text-xs uppercase tracking-wider">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -148,7 +148,7 @@ export default function InvoiceDetailPage() {
           </div>
         </div>
 
-        <p className="mt-8 text-xs text-white/30 print:text-gray-400">
+        <p className="mt-8 text-xs text-white/55 print:text-gray-400">
           Generated {new Date(invoice.created_at).toLocaleDateString()} · {invoice.total_hours}h @ {formatCurrency(invoice.hourly_rate, invoice.currency)}/h
         </p>
       </div>

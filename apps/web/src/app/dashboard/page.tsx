@@ -101,7 +101,7 @@ export default function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Today&apos;s Overview</h1>
-      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// dashboard</p>
+      <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// dashboard</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
@@ -111,7 +111,7 @@ export default function DashboardPage() {
         ].map((card) => {
           const inner = (
             <>
-              <p className="text-sm text-white/40">{card.label}</p>
+              <p className="text-sm text-white/60">{card.label}</p>
               <p className={`text-2xl font-display font-bold mt-1 ${loading ? 'animate-pulse text-white/20' : ''}`}>
                 {loading ? '—' : card.value}
               </p>
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                       title={`${b.hours}h`}
                     />
                   </div>
-                  <span className="text-[10px] text-white/40">{b.label}</span>
+                  <span className="text-[10px] text-white/60">{b.label}</span>
                 </div>
               ))}
             </div>
@@ -157,14 +157,14 @@ export default function DashboardPage() {
           {loading ? (
             <div className="h-32 animate-pulse rounded-xl bg-white/[0.04]" />
           ) : topProjects.length === 0 ? (
-            <p className="text-sm text-white/40">No tracked project time today.</p>
+            <p className="text-sm text-white/60">No tracked project time today.</p>
           ) : (
             <div className="space-y-3">
               {topProjects.map((p, i) => (
                 <div key={i}>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-white/70 truncate">{p.name}</span>
-                    <span className="text-white/40">{p.hours}h</span>
+                    <span className="text-white/60">{p.hours}h</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-white/10">
                     <div className="h-2 rounded-full bg-brand transition-all" style={{ width: `${(p.hours / maxProject) * 100}%` }} />
@@ -189,7 +189,7 @@ export default function DashboardPage() {
           <div key={user.memberId} className="flex items-center justify-between glass-card p-4">
             <div>
               <p className="font-medium">{user.name}</p>
-              <p className="text-sm text-white/40">{user.hours}h tracked</p>
+              <p className="text-sm text-white/60">{user.hours}h tracked</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-white/70">Activity: {user.avgActivity}%</p>

@@ -57,7 +57,7 @@ export default function LoginPage() {
             </button>
             {error && <p className="text-sm text-red-400 text-center">{error}</p>}
             <div className="flex items-center justify-between text-sm">
-              <button type="button" onClick={() => { setMode('forgot'); setError(''); }} className="text-white/40 hover:text-brand transition-colors">
+              <button type="button" onClick={() => { setMode('forgot'); setError(''); }} className="text-white/60 hover:text-brand transition-colors">
                 Forgot password?
               </button>
               <a href="/signup" className="text-brand hover:underline">Sign up</a>
@@ -73,7 +73,7 @@ export default function LoginPage() {
               {loading ? 'Sending...' : 'Send Reset Link'}
             </button>
             {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-            <button type="button" onClick={() => { setMode('login'); setError(''); }} className="w-full text-sm text-white/40 hover:text-brand transition-colors">
+            <button type="button" onClick={() => { setMode('login'); setError(''); }} className="w-full text-sm text-white/60 hover:text-brand transition-colors">
               Back to sign in
             </button>
           </form>
@@ -87,7 +87,7 @@ export default function LoginPage() {
               </svg>
             </div>
             <p className="text-sm text-white/70">Check your email for a password reset link.</p>
-            <p className="text-xs text-white/30">Didn&apos;t receive it? Check your spam folder.</p>
+            <p className="text-xs text-white/55">Didn&apos;t receive it? Check your spam folder.</p>
             <button type="button" onClick={() => { setMode('login'); setError(''); }} className="text-sm text-brand hover:underline">
               Back to sign in
             </button>

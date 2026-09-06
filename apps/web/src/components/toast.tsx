@@ -45,7 +45,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             role="status"
+            tabIndex={0}
             onClick={() => remove(t.id)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') { e.preventDefault(); remove(t.id); } }}
+            aria-label="Dismiss notification"
             className={`cursor-pointer glass-card px-4 py-3 text-sm shadow-lg flex items-start gap-2 ${
               t.type === 'success'
                 ? 'border-green-500/30'

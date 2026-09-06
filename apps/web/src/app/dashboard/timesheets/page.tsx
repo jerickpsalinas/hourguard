@@ -111,10 +111,10 @@ export default function TimesheetsPage() {
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Timesheets</h1>
-      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// time entries</p>
+      <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// time entries</p>
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} max={toDate} className={inputClass} aria-label="From date" />
-        <span className="text-white/30 text-sm">to</span>
+        <span className="text-white/55 text-sm">to</span>
         <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} min={fromDate} className={inputClass} aria-label="To date" />
         {isAdmin && (
           <select value={memberFilter} onChange={(e) => setMemberFilter(e.target.value)} className={inputClass} aria-label="Filter by member">
@@ -144,15 +144,15 @@ export default function TimesheetsPage() {
       {!loading && entries.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="glass-card p-4">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Total Hours</p>
+            <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Total Hours</p>
             <p className="text-xl font-display font-bold">{totalHoursStr}</p>
           </div>
           <div className="glass-card p-4">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Entries</p>
+            <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Entries</p>
             <p className="text-xl font-display font-bold">{entries.length}</p>
           </div>
           <div className="glass-card p-4">
-            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Avg Activity</p>
+            <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Avg Activity</p>
             <p className="text-xl font-display font-bold">{avgActivity}%</p>
           </div>
         </div>
@@ -162,18 +162,18 @@ export default function TimesheetsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/[0.08]">
-              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Employee</th>
-              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Project</th>
-              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Date</th>
-              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Duration</th>
-              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Activity</th>
+              <th scope="col" className="text-left px-4 py-3 text-white/60 font-medium text-xs uppercase tracking-wider">Employee</th>
+              <th scope="col" className="text-left px-4 py-3 text-white/60 font-medium text-xs uppercase tracking-wider">Project</th>
+              <th scope="col" className="text-left px-4 py-3 text-white/60 font-medium text-xs uppercase tracking-wider">Date</th>
+              <th scope="col" className="text-left px-4 py-3 text-white/60 font-medium text-xs uppercase tracking-wider">Duration</th>
+              <th scope="col" className="text-left px-4 py-3 text-white/60 font-medium text-xs uppercase tracking-wider">Activity</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/[0.06]">
             {loading ? (
               <tr><td colSpan={5} className="p-0"><SkeletonTable rows={5} cols={5} /></td></tr>
             ) : entries.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-white/40">No time entries for this period.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-white/60">No time entries for this period.</td></tr>
             ) : (
               entries.map((entry) => (
                 <tr key={entry.id} className="hover:bg-white/[0.03] transition-colors">

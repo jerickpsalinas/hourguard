@@ -124,10 +124,10 @@ export default function MembersPage() {
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Members</h1>
-      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// team management</p>
+      <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// team management</p>
 
       <form onSubmit={createInvite} className="flex flex-wrap gap-3 mb-6">
-        <input type="email" placeholder="Email (optional)" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className={`flex-1 min-w-[200px] ${inputClass}`} />
+        <input type="email" placeholder="Email (optional)" aria-label="Invite email (optional)" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className={`flex-1 min-w-[200px] ${inputClass}`} />
         <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value as 'employee' | 'manager')} className={inputClass} aria-label="Invite role">
           <option value="employee">Employee</option>
           <option value="manager">Manager</option>
@@ -162,7 +162,7 @@ export default function MembersPage() {
                 <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 glass-card p-4">
                   <div className="min-w-0">
                     <p className="font-medium truncate">{inv.email || 'Anyone with the link'}</p>
-                    <p className="text-xs text-white/40">
+                    <p className="text-xs text-white/60">
                       <span className="capitalize">{inv.role}</span>
                       {' · '}
                       {expired ? (
@@ -203,9 +203,9 @@ export default function MembersPage() {
             <div key={m.id} className="flex items-center justify-between glass-card p-4">
               <div>
                 <p className="font-medium">{m.full_name}</p>
-                <p className="text-xs text-white/40">
+                <p className="text-xs text-white/60">
                   {m.email}
-                  <span className="text-white/30"> · {formatHours(hoursByMember[m.id] ?? 0)} this week</span>
+                  <span className="text-white/55"> · {formatHours(hoursByMember[m.id] ?? 0)} this week</span>
                 </p>
               </div>
               <div className="flex items-center gap-3">

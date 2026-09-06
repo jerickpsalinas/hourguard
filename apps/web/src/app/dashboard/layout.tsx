@@ -107,7 +107,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             <div>
               <h2 className="text-sm font-display font-bold tracking-tight">Hourguard</h2>
               {orgName && memberships.length <= 1 && (
-                <p className="text-[10px] text-white/40 font-mono uppercase tracking-wider">// {orgName}</p>
+                <p className="text-[10px] text-white/60 font-mono uppercase tracking-wider">// {orgName}</p>
               )}
             </div>
           </div>
@@ -137,7 +137,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                 isActive(item.href)
                   ? 'bg-brand/10 text-brand font-medium'
-                  : 'text-white/40 hover:bg-white/[0.06] hover:text-white/70'
+                  : 'text-white/60 hover:bg-white/[0.06] hover:text-white/70'
               }`}
             >
               <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -152,12 +152,12 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           {member && (
             <>
               <p className="text-sm font-medium">{member.fullName}</p>
-              <p className="text-xs text-white/40 capitalize">{member.role}</p>
+              <p className="text-xs text-white/60 capitalize">{member.role}</p>
             </>
           )}
           <button
             onClick={handleLogout}
-            className="mt-3 flex items-center gap-2 text-sm text-white/40 hover:text-brand transition-colors"
+            className="mt-3 flex items-center gap-2 text-sm text-white/60 hover:text-brand transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -171,7 +171,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-white/[0.08] bg-black/80 backdrop-blur px-6 py-3 lg:hidden">
           <button
             onClick={() => setMobileOpen(true)}
-            className="rounded-xl p-1.5 text-white/40 hover:bg-white/[0.06] hover:text-white"
+            className="rounded-xl p-1.5 text-white/60 hover:bg-white/[0.06] hover:text-white"
             aria-label="Open menu"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

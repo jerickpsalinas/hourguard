@@ -74,7 +74,7 @@ export default function SettingsPage() {
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Settings</h1>
-      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// configuration</p>
+      <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// configuration</p>
 
       <div className="mb-8">
         <h2 className="text-lg font-display font-semibold mb-4">API Keys</h2>
@@ -84,7 +84,7 @@ export default function SettingsPage() {
         </p>
 
         <form onSubmit={createApiKey} className="flex gap-3 mb-4">
-          <input type="text" placeholder="Key name (e.g. n8n-integration)" value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} className={inputClass} />
+          <input type="text" placeholder="Key name (e.g. n8n-integration)" aria-label="API key name" value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} className={inputClass} />
           <button type="submit" className="btn-brand px-4 py-2.5 text-sm">Generate Key</button>
         </form>
 
@@ -101,14 +101,14 @@ export default function SettingsPage() {
         {loading ? (
           <SkeletonRows count={2} />
         ) : apiKeys.length === 0 ? (
-          <p className="text-white/40">No API keys yet.</p>
+          <p className="text-white/60">No API keys yet.</p>
         ) : (
           <div className="space-y-2">
             {apiKeys.map((key) => (
               <div key={key.id} className="flex items-center justify-between glass-card p-4">
                 <div>
                   <p className="font-medium">{key.name}</p>
-                  <p className="text-xs text-white/40 font-mono">
+                  <p className="text-xs text-white/60 font-mono">
                     {key.key_prefix}... | Created {new Date(key.created_at).toLocaleDateString()}
                     {key.last_used_at && ` | Last used ${new Date(key.last_used_at).toLocaleDateString()}`}
                   </p>
@@ -119,7 +119,7 @@ export default function SettingsPage() {
                       Revoke
                     </button>
                   ) : (
-                    <span className="text-xs text-white/30">Revoked</span>
+                    <span className="text-xs text-white/55">Revoked</span>
                   )}
                 </div>
               </div>
