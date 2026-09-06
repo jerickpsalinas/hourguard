@@ -146,9 +146,19 @@ export default function ScreenshotsPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={closeModal}
           role="dialog"
+          aria-modal="true"
           aria-label="Expanded screenshot"
         >
-          <img src={expandedUrl} alt="Expanded screenshot" className="max-w-[90vw] max-h-[90vh] rounded-2xl" />
+          <button
+            onClick={closeModal}
+            aria-label="Close"
+            className="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white/80 hover:bg-white/20 hover:text-white transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img src={expandedUrl} alt="Expanded screenshot" className="max-w-[90vw] max-h-[90vh] rounded-2xl" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>

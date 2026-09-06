@@ -10,6 +10,17 @@
   * {
     border-color: hsl(0 0% 24%);
   }
+
+  /* Visible keyboard focus for interactive elements (mouse clicks stay clean). */
+  a:focus-visible,
+  button:focus-visible,
+  [role='button']:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid hsl(0 84% 60%);
+    outline-offset: 2px;
+  }
 }
 
 @layer utilities {

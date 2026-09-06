@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { localDateKey, localDayBounds } from '@/lib/dates';
@@ -12,6 +13,7 @@ type ProjectTotal = { name: string; hours: number };
 export default function DashboardPage() {
   const supabase = createClient();
   const { member } = useAuth();
+  const isAdmin = member?.role === 'owner' || member?.role === 'manager';
   const [summary, setSummary] = useState<any[]>([]);
   const [stats, setStats] = useState({ members: 0, projects: 0, totalHours: 0 });
   const [weekBars, setWeekBars] = useState<DayBar[]>([]);
@@ -130,17 +132,26 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Total Hours Today', value: `${stats.totalHours}h` },
-          { label: 'Active Members', value: stats.members },
-          { label: 'Active Projects', value: stats.projects },
-        ].map((card) => (
-          <div key={card.label} className="glass-card p-5">
-            <p className="text-sm text-white/40">{card.label}</p>
-            <p className={`text-2xl font-display font-bold mt-1 ${loading ? 'animate-pulse text-white/20' : ''}`}>
-              {loading ? '—' : card.value}
-            </p>
-          </div>
-        ))}
+          { label: 'Total Hours Today', value: `${stats.totalHours}h`, href: '/dashboard/timesheets' },
+          { label: 'Active Members', value: stats.members, href: isAdmin ? '/dashboard/members' : undefined },
+          { label: 'Active Projects', value: stats.projects, href: '/dashboard/projects' },
+        ].map((card) => {
+          const inner = (
+            <>
+              <p className="text-sm text-white/40">{card.label}</p>
+              <p className={`text-2xl font-display font-bold mt-1 ${loading ? 'animate-pulse text-white/20' : ''}`}>
+                {loading ? '—' : card.value}
+              </p>
+            </>
+          );
+          return card.href ? (
+            <Link key={card.label} href={card.href} className="glass-card p-5 hover:border-white/20 transition-colors">
+              {inner}
+            </Link>
+          ) : (
+            <div key={card.label} className="glass-card p-5">{inner}</div>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
