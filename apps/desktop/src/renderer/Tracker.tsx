@@ -51,6 +51,13 @@ export default function Tracker({ onLogout }: { onLogout: () => void }) {
 
   useEffect(() => {
     if (state === 'tracking') {
+      // Re-sync the clock to the real current interval on every entry into
+      // tracking (fresh start OR idle auto-resume, which starts a new interval).
+      window.api.getStatus().then((s) => {
+        if (s.intervalStart) {
+          setElapsed(Math.floor((Date.now() - new Date(s.intervalStart).getTime()) / 1000));
+        }
+      });
       timerRef.current = setInterval(() => {
         setElapsed((prev) => prev + 1);
         window.api.getStatus().then((s) => setActivity(s.activity));
@@ -65,13 +72,25 @@ export default function Tracker({ onLogout }: { onLogout: () => void }) {
     };
   }, [state]);
 
+  // Optimistically reflect the toggle, but fall back to the real tracker state
+  // if the IPC call fails so the UI never lies about whether tracking is on.
   const toggle = async () => {
     if (state === 'idle') {
       setState('tracking');
-      await window.api.startTracking(selectedProject || undefined);
+      try {
+        await window.api.startTracking(selectedProject || undefined);
+      } catch {
+        const s = await window.api.getStatus();
+        setState(s.state);
+      }
     } else {
       setState('idle');
-      await window.api.stopTracking();
+      try {
+        await window.api.stopTracking();
+      } catch {
+        const s = await window.api.getStatus();
+        setState(s.state);
+      }
     }
   };
 
