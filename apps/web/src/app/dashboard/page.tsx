@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { localDateKey, localDayBounds } from '@/lib/dates';
+import { summarizeEntries, sumSecondsByLocalDay, type RawEntry } from '@/lib/aggregate';
 import { EmptyState } from '@/components/empty-state';
 
 type DayBar = { label: string; hours: number };
@@ -56,38 +57,13 @@ export default function DashboardPage() {
           .eq('is_active', true),
       ]);
 
-      const entries = entriesResult.data;
       const memberCount = membersResult.count;
       const projectCount = projectsResult.count;
 
-      const userTotals = new Map<string, { name: string; seconds: number; avgActivity: number; count: number }>();
-      const projectSecs = new Map<string, number>();
-      let totalSecs = 0;
+      const summary = summarizeEntries((entriesResult.data ?? []) as unknown as RawEntry[]);
 
-      for (const entry of entries ?? []) {
-        const name = (entry as any).hg_members?.full_name ?? 'Unknown';
-        const existing = userTotals.get(entry.member_id) ?? { name, seconds: 0, avgActivity: 0, count: 0 };
-        // Only completed intervals contribute to hours and to the activity average,
-        // so an in-progress row can't dilute the average or a null skew it to NaN.
-        if (entry.stopped_at) {
-          const secs = (new Date(entry.stopped_at).getTime() - new Date(entry.started_at).getTime()) / 1000;
-          existing.seconds += secs;
-          totalSecs += secs;
-          const pName = (entry as any).hg_projects?.name ?? 'No project';
-          projectSecs.set(pName, (projectSecs.get(pName) ?? 0) + secs);
-          existing.avgActivity += entry.activity_percent ?? 0;
-          existing.count++;
-        }
-        userTotals.set(entry.member_id, existing);
-      }
-
-      // Last 7 days daily totals
-      const dayMap = new Map<string, number>();
-      for (const e of weekResult.data ?? []) {
-        const key = localDateKey(new Date(e.started_at));
-        const secs = (new Date(e.stopped_at!).getTime() - new Date(e.started_at).getTime()) / 1000;
-        dayMap.set(key, (dayMap.get(key) ?? 0) + secs);
-      }
+      // Last 7 days daily totals, bucketed by local day.
+      const dayMap = sumSecondsByLocalDay(weekResult.data ?? []);
       const bars: DayBar[] = [];
       for (let i = 6; i >= 0; i--) {
         const d = new Date(now);
@@ -99,24 +75,15 @@ export default function DashboardPage() {
         });
       }
 
-      setSummary(
-        Array.from(userTotals.values()).map((u) => ({
-          ...u,
-          hours: (u.seconds / 3600).toFixed(1),
-          avgActivity: u.count > 0 ? Math.round(u.avgActivity / u.count) : 0,
-        }))
-      );
+      setSummary(summary.members);
       setWeekBars(bars);
       setTopProjects(
-        Array.from(projectSecs.entries())
-          .map(([name, secs]) => ({ name, hours: Math.round((secs / 3600) * 10) / 10 }))
-          .sort((a, b) => b.hours - a.hours)
-          .slice(0, 5)
+        summary.projects.slice(0, 5).map((p) => ({ name: p.name, hours: Math.round((p.seconds / 3600) * 10) / 10 }))
       );
       setStats({
         members: memberCount ?? 0,
         projects: projectCount ?? 0,
-        totalHours: Math.round((totalSecs / 3600) * 10) / 10,
+        totalHours: summary.totalHours,
       });
       setLoading(false);
     })();
@@ -212,8 +179,8 @@ export default function DashboardPage() {
             description="Once your team starts tracking with the desktop app, their hours and activity show up here."
           />
         )}
-        {summary.map((user, i) => (
-          <div key={i} className="flex items-center justify-between glass-card p-4">
+        {summary.map((user) => (
+          <div key={user.memberId} className="flex items-center justify-between glass-card p-4">
             <div>
               <p className="font-medium">{user.name}</p>
               <p className="text-sm text-white/40">{user.hours}h tracked</p>
