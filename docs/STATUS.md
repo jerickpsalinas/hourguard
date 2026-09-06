@@ -56,9 +56,15 @@ Snapshot of what's done and what still needs a live environment. Keep this curre
    `portal_users` has `email`/`role` columns and the service role key is set in
    the deploy env), but the flows no longer depend on RLS to succeed.
 
-2. **Screenshot retention policy** — screenshots accumulate forever, growing
-   storage/hosting cost without bound. Add auto-deletion after 30–90 days
-   (scheduled job / SQL policy) so the flat yearly hosting fee stays viable.
+2. **Screenshot retention policy** — ✅ **fixed in code.** A daily Vercel Cron
+   (`vercel.json` → `0 4 * * *`) calls `GET /api/cron/cleanup-screenshots`,
+   which deletes screenshots older than `SCREENSHOT_RETENTION_DAYS` (default 90)
+   from both the `screenshots` storage bucket and the `hg_screenshots` table,
+   in batches. Protected by `CRON_SECRET`. Storage objects are removed before
+   their DB rows so a storage failure retries next run instead of orphaning
+   files. **To activate on deploy:** set `CRON_SECRET` (and optionally
+   `SCREENSHOT_RETENTION_DAYS`) in the Vercel project env. Verify the first run
+   against real data.
 
 3. **Deployment** — Vercel deploy to hourguard.hirejps.com; set env vars.
 
