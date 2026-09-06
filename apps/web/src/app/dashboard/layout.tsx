@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
 import { ToastProvider } from '@/components/toast';
@@ -32,6 +32,11 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const { member, orgName, memberships, isAdmin, loading, error, switchOrg } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Redirect as a side effect, not during render (avoids React state-update warnings).
+  useEffect(() => {
+    if (error === 'not_authenticated') router.push('/login');
+  }, [error, router]);
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -44,7 +49,6 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   }
 
   if (error === 'not_authenticated') {
-    router.push('/login');
     return null;
   }
 
