@@ -56,6 +56,22 @@ Snapshot of what's done and what still needs a live environment. Keep this curre
 
 5. **Account provisioning** — Paddle webhook → auto-create org/access after purchase.
 
+## Deeper refactors flagged by review (need schema/live testing)
+These are structural improvements, not bugs — the current code works but models
+things at the wrong layer. Do with the live DB:
+- **Invoice `created_by`**: the API attributes API-generated invoices to an
+  arbitrary owner/manager because `created_by` is NOT NULL → `hg_members`. Better:
+  make it nullable or add a `created_by_api_key`/`created_via` column so
+  integration-created records are modeled honestly.
+- **Profile identity dual-write**: `full_name` is mirrored into `hg_members` and
+  `portal_users` by best-effort client writes (signup, invite, profile). Better:
+  single source of truth (store once + join, or a DB trigger to sync).
+- **reset-password validity**: currently inferred from a 10s timeout. Better:
+  determine deterministically from the recovery token / URL hash params.
+- **Root `force-dynamic`**: pins the whole route tree dynamic; could be scoped to
+  only the routes that need per-request rendering (marketing/`/download`/404 can be
+  static). Left as-is to avoid regressing the SSR fix without a deploy to verify.
+
 ## Pricing (current landing-page defaults — edit `PRICING` in `apps/web/src/app/page.tsx`)
 - One-time license: $399 (unlimited employees)
 - Yearly hosting: $149
