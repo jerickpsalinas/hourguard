@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonTable } from '@/components/skeleton';
 import { toCsv, downloadCsv } from '@/lib/csv';
+import { formatDuration } from '@/lib/format';
 import { localDateKey, localRangeBounds } from '@/lib/dates';
 
 export default function TimesheetsPage() {
@@ -63,14 +64,6 @@ export default function TimesheetsPage() {
       setLoading(false);
     })();
   }, [member, fromDate, toDate, memberFilter, projectFilter]);
-
-  function formatDuration(start: string, end: string | null) {
-    if (!end) return 'In progress';
-    const secs = (new Date(end).getTime() - new Date(start).getTime()) / 1000;
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    return `${h}h ${m}m`;
-  }
 
   function exportCsv() {
     const rows = entries.map((entry) => [

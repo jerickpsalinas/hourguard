@@ -20,3 +20,14 @@ export function formatCurrency(amount: number, currency = 'USD'): string {
 export function formatHours(hours: number): string {
   return `${(Number(hours) || 0).toFixed(1)}h`;
 }
+
+// Duration between two timestamps as "Hh Mm". Returns "In progress" for an
+// entry with no end, and clamps negatives (bad data) to "0h 0m".
+export function formatDuration(startISO: string, endISO: string | null): string {
+  if (!endISO) return 'In progress';
+  const secs = (new Date(endISO).getTime() - new Date(startISO).getTime()) / 1000;
+  if (!Number.isFinite(secs) || secs < 0) return '0h 0m';
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  return `${h}h ${m}m`;
+}
