@@ -6,4 +6,4 @@ A time tracking and employee monitoring platform. Web dashboard for managers and
 - **Desktop tracker:** Electron — captures time entries, keyboard/mouse activity, and periodic screenshots
 - **Backend:** shared `hirejps-portal` Supabase; multi-tenant scoped by `organization_id` with RLS
 
-See `CLAUDE.md` for architecture and `DEPLOY.md` for deployment.
+See `CLAUDE.md` for architecture, `DEPLOY.md` for deployment, and `docs/API.md` for the REST API reference.
