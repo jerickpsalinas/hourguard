@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { member_id, project_id, started_at, stopped_at, memo } = body;
+  const { member_id, project_id, started_at, stopped_at } = body;
   if (!member_id || !started_at) {
     return NextResponse.json({ error: 'member_id and started_at are required' }, { status: 400 });
   }
@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
       project_id: project_id || null,
       started_at,
       stopped_at: stopped_at || null,
-      memo: memo || null,
     })
     .select()
     .single();
