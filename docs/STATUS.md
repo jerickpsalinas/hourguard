@@ -83,8 +83,10 @@ things at the wrong layer. Do with the live DB:
 - **Profile identity dual-write**: `full_name` is mirrored into `hg_members` and
   `portal_users` by best-effort client writes (signup, invite, profile). Better:
   single source of truth (store once + join, or a DB trigger to sync).
-- **reset-password validity**: currently inferred from a 10s timeout. Better:
-  determine deterministically from the recovery token / URL hash params.
+- **reset-password validity**: ✅ **done.** No longer inferred from a 10s
+  timeout — the page now reads the recovery URL directly (error param → invalid;
+  PKCE `?code` → `exchangeCodeForSession`; implicit-flow recovery token in the
+  hash → show form; otherwise fall back to an existing session, else invalid).
 - **Root `force-dynamic`**: pins the whole route tree dynamic; could be scoped to
   only the routes that need per-request rendering (marketing/`/download`/404 can be
   static). Left as-is to avoid regressing the SSR fix without a deploy to verify.

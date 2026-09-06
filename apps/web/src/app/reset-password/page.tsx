@@ -15,19 +15,46 @@ export default function ResetPasswordPage() {
   const supabase = createClient();
 
   useEffect(() => {
+    let active = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setReady(true);
-      }
+      if (event === 'PASSWORD_RECOVERY') setReady(true);
     });
 
-    const timeout = setTimeout(() => {
-      setExpired(true);
-    }, 10000);
+    // Determine validity deterministically from the recovery URL rather than
+    // guessing with a timeout: Supabase sends either an error, a PKCE ?code, or
+    // an implicit-flow recovery token in the hash.
+    (async () => {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const query = new URLSearchParams(window.location.search);
+
+      if (hash.get('error') || query.get('error')) {
+        if (active) setExpired(true);
+        return;
+      }
+
+      const code = query.get('code');
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (active) error ? setExpired(true) : setReady(true);
+        return;
+      }
+
+      if (hash.get('type') === 'recovery' || hash.get('access_token')) {
+        // supabase-js consumes the hash and fires PASSWORD_RECOVERY; the token's
+        // presence is enough to show the form.
+        if (active) setReady(true);
+        return;
+      }
+
+      // The hash may already have been consumed into a session before this ran.
+      const { data } = await supabase.auth.getSession();
+      if (active) data.session ? setReady(true) : setExpired(true);
+    })();
 
     return () => {
+      active = false;
       subscription.unsubscribe();
-      clearTimeout(timeout);
     };
   }, []);
 
