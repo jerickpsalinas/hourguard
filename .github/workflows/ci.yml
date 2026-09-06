@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.9.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (web)
+        run: pnpm --filter @hourguard/web exec tsc --noEmit
+
+      - name: Typecheck (desktop)
+        run: pnpm --filter @hourguard/desktop exec tsc --noEmit
+
+      - name: Unit tests (web)
+        run: pnpm --filter @hourguard/web test
+
+      - name: Build (web)
+        run: pnpm --filter @hourguard/web build
+        env:
+          # Placeholder values so the build's client creation succeeds; real
+          # values are configured in the deployment environment.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: placeholder-service-key
+
+      - name: Build (desktop)
+        run: pnpm --filter @hourguard/desktop build
+        env:
+          MAIN_VITE_SUPABASE_URL: https://placeholder.supabase.co
+          MAIN_VITE_SUPABASE_ANON_KEY: placeholder-anon-key
