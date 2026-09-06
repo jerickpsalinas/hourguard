@@ -106,12 +106,31 @@ export default function TimesheetsPage() {
   const totalHoursStr = formatHours(totals.seconds / 3600);
   const avgActivity = totals.completed > 0 ? Math.round(totals.activitySum / totals.completed) : 0;
 
+  function setPreset(days: number | 'month') {
+    const today = new Date();
+    if (days === 'month') {
+      setFromDate(localDateKey(new Date(today.getFullYear(), today.getMonth(), 1)));
+    } else {
+      const from = new Date(today);
+      from.setDate(from.getDate() - (days - 1));
+      setFromDate(localDateKey(from));
+    }
+    setToDate(localDateKey(today));
+  }
+
   const inputClass = 'rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';
+  const presetClass = 'rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-white/70 hover:text-white hover:bg-white/[0.1] transition-colors';
 
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Timesheets</h1>
       <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// time entries</p>
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <button onClick={() => setPreset(1)} className={presetClass}>Today</button>
+        <button onClick={() => setPreset(7)} className={presetClass}>Last 7 days</button>
+        <button onClick={() => setPreset(30)} className={presetClass}>Last 30 days</button>
+        <button onClick={() => setPreset('month')} className={presetClass}>This month</button>
+      </div>
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} max={toDate} className={inputClass} aria-label="From date" />
         <span className="text-white/55 text-sm">to</span>
