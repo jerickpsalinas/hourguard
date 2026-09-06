@@ -130,6 +130,8 @@ export class Tracker {
   }
 
   private scheduleScreenshot() {
+    // Clear any still-pending capture so intervals can't stack timers.
+    if (this.screenshotTimer) clearTimeout(this.screenshotTimer);
     const randomOffset = Math.floor(Math.random() * INTERVAL_MS);
     this.screenshotTimer = setTimeout(async () => {
       if (this.state !== 'tracking' || !this.currentEntryId) return;
