@@ -7,17 +7,22 @@ import react from '@vitejs/plugin-react';
 // process; RENDERER_VITE_-prefixed ones to the renderer.
 const envDir = resolve(__dirname, '../..');
 
+// Build into dist/ (not electron-vite's default out/) so it matches package.json
+// "main" and electron-builder.yml's packaged files.
 export default defineConfig({
   main: {
     envDir,
     plugins: [externalizeDepsPlugin()],
+    build: { outDir: 'dist/main' },
   },
   preload: {
     envDir,
     plugins: [externalizeDepsPlugin()],
+    build: { outDir: 'dist/preload' },
   },
   renderer: {
     envDir,
     plugins: [react()],
+    build: { outDir: 'dist/renderer' },
   },
 });
