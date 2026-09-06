@@ -72,6 +72,18 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (project_id) {
+    const { data: projectCheck } = await supabase
+      .from('hg_projects')
+      .select('id')
+      .eq('id', project_id)
+      .eq('organization_id', auth.organizationId)
+      .single();
+    if (!projectCheck) {
+      return NextResponse.json({ error: 'project_id not found in this organization' }, { status: 404 });
+    }
+  }
+
   let query = supabase
     .from('hg_time_entries')
     .select('started_at, stopped_at')

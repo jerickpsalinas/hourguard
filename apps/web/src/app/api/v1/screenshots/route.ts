@@ -19,6 +19,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'member_id, time_entry_id, storage_path, and captured_at are required' }, { status: 400 });
   }
 
+  // Screenshots live under `<organization_id>/<member_id>/...`. Reject any path
+  // outside the caller's org prefix — otherwise a key holder could register a row
+  // pointing at another org's file and read it via the GET-signed URL.
+  if (typeof storage_path !== 'string' || !storage_path.startsWith(`${auth.organizationId}/`)) {
+    return NextResponse.json(
+      { error: `storage_path must be within this organization (start with "${auth.organizationId}/")` },
+      { status: 400 }
+    );
+  }
+
   const supabase = createServiceClient();
 
   const { data: memberCheck } = await supabase
@@ -30,6 +40,18 @@ export async function POST(request: NextRequest) {
 
   if (!memberCheck) {
     return NextResponse.json({ error: 'Member not found in this organization' }, { status: 404 });
+  }
+
+  // The referenced time entry must also belong to this org.
+  const { data: entryCheck } = await supabase
+    .from('hg_time_entries')
+    .select('id')
+    .eq('id', time_entry_id)
+    .eq('organization_id', auth.organizationId)
+    .single();
+
+  if (!entryCheck) {
+    return NextResponse.json({ error: 'time_entry_id not found in this organization' }, { status: 404 });
   }
 
   const { data, error } = await supabase
