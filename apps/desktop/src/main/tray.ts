@@ -41,4 +41,7 @@ export function setupTray(mainWindow: BrowserWindow, tracker: Tracker) {
 
   updateMenu();
   tray.on('double-click', () => mainWindow.show());
+
+  // Let callers rebuild the menu when tracker state changes (idle auto-pause, etc.).
+  return { refresh: updateMenu };
 }

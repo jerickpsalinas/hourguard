@@ -14,8 +14,9 @@ export async function POST(request: NextRequest) {
   }
 
   const { member_id, time_entry_id, storage_path, captured_at, activity_percent } = body;
-  if (!member_id || !storage_path || !captured_at) {
-    return NextResponse.json({ error: 'member_id, storage_path, and captured_at are required' }, { status: 400 });
+  // hg_screenshots.time_entry_id is NOT NULL and references hg_time_entries.
+  if (!member_id || !time_entry_id || !storage_path || !captured_at) {
+    return NextResponse.json({ error: 'member_id, time_entry_id, storage_path, and captured_at are required' }, { status: 400 });
   }
 
   const supabase = createServiceClient();
@@ -36,7 +37,7 @@ export async function POST(request: NextRequest) {
     .insert({
       organization_id: auth.organizationId,
       member_id,
-      time_entry_id: time_entry_id || null,
+      time_entry_id,
       storage_path,
       captured_at,
       activity_percent: activity_percent ?? 0,

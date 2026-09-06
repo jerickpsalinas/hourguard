@@ -27,13 +27,14 @@ export default function ProfilePage() {
     const { error: memberErr } = await supabase
       .from('hg_members')
       .update({ full_name: name })
-      .eq('id', member.id);
+      .eq('id', member.id)
+      .eq('organization_id', member.organizationId);
 
     // ...and the shared HireJPS identity row (best-effort, keeps products in sync).
     await supabase
       .from('portal_users')
       .update({ full_name: name })
-      .eq('id', member.authUserId);
+      .eq('auth_user_id', member.authUserId);
 
     setSaving(false);
 

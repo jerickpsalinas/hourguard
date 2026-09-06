@@ -56,14 +56,14 @@ export default function MembersPage() {
   }
 
   async function toggleMember(id: string, isActive: boolean) {
-    if (id === member?.id) return;
-    await supabase.from('hg_members').update({ is_active: !isActive }).eq('id', id);
+    if (!member || id === member.id) return;
+    await supabase.from('hg_members').update({ is_active: !isActive }).eq('id', id).eq('organization_id', member.organizationId);
     loadMembers();
   }
 
   async function changeRole(id: string, newRole: string) {
-    if (id === member?.id) return;
-    await supabase.from('hg_members').update({ role: newRole }).eq('id', id);
+    if (!member || id === member.id) return;
+    await supabase.from('hg_members').update({ role: newRole }).eq('id', id).eq('organization_id', member.organizationId);
     loadMembers();
   }
 

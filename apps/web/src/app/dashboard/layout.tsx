@@ -28,7 +28,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-  const { member, orgName, loading, error } = useAuth();
+  const { member, orgName, memberships, loading, error, switchOrg } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   if (loading) {
@@ -101,9 +101,26 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <h2 className="text-sm font-display font-bold tracking-tight">Hourguard</h2>
-              {orgName && <p className="text-[10px] text-white/40 font-mono uppercase tracking-wider">// {orgName}</p>}
+              {orgName && memberships.length <= 1 && (
+                <p className="text-[10px] text-white/40 font-mono uppercase tracking-wider">// {orgName}</p>
+              )}
             </div>
           </div>
+
+          {memberships.length > 1 && (
+            <select
+              value={member?.organizationId ?? ''}
+              onChange={(e) => switchOrg(e.target.value)}
+              aria-label="Switch organization"
+              className="mt-3 w-full rounded-xl border border-white/10 bg-white/[0.06] px-2.5 py-1.5 text-xs text-white/70 focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors"
+            >
+              {memberships.map((m) => (
+                <option key={m.organizationId} value={m.organizationId}>
+                  {m.orgName}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <nav className="space-y-1 flex-1">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
+import { localDateKey, localDayBounds } from '@/lib/dates';
 
 type DayBar = { label: string; hours: number };
 type ProjectTotal = { name: string; hours: number };
@@ -20,10 +21,10 @@ export default function DashboardPage() {
     if (!member) return;
     const orgId = member.organizationId;
     const now = new Date();
-    const today = now.toISOString().split('T')[0];
+    const todayBounds = localDayBounds(localDateKey(now));
     const weekAgo = new Date(now);
     weekAgo.setDate(weekAgo.getDate() - 6);
-    const weekStart = weekAgo.toISOString().split('T')[0];
+    const weekStartISO = localDayBounds(localDateKey(weekAgo)).startISO;
 
     (async () => {
       const [entriesResult, weekResult, membersResult, projectsResult] = await Promise.all([
@@ -31,14 +32,15 @@ export default function DashboardPage() {
           .from('hg_time_entries')
           .select('member_id, started_at, stopped_at, activity_percent, hg_members(full_name), hg_projects(name)')
           .eq('organization_id', orgId)
-          .gte('started_at', `${today}T00:00:00`)
+          .gte('started_at', todayBounds.startISO)
+          .lte('started_at', todayBounds.endISO)
           .order('started_at', { ascending: false }),
         supabase
           .from('hg_time_entries')
           .select('started_at, stopped_at')
           .eq('organization_id', orgId)
           .not('stopped_at', 'is', null)
-          .gte('started_at', `${weekStart}T00:00:00`),
+          .gte('started_at', weekStartISO),
         supabase
           .from('hg_members')
           .select('*', { count: 'exact', head: true })
@@ -62,22 +64,24 @@ export default function DashboardPage() {
       for (const entry of entries ?? []) {
         const name = (entry as any).hg_members?.full_name ?? 'Unknown';
         const existing = userTotals.get(entry.member_id) ?? { name, seconds: 0, avgActivity: 0, count: 0 };
+        // Only completed intervals contribute to hours and to the activity average,
+        // so an in-progress row can't dilute the average or a null skew it to NaN.
         if (entry.stopped_at) {
           const secs = (new Date(entry.stopped_at).getTime() - new Date(entry.started_at).getTime()) / 1000;
           existing.seconds += secs;
           totalSecs += secs;
           const pName = (entry as any).hg_projects?.name ?? 'No project';
           projectSecs.set(pName, (projectSecs.get(pName) ?? 0) + secs);
+          existing.avgActivity += entry.activity_percent ?? 0;
+          existing.count++;
         }
-        existing.avgActivity += entry.activity_percent;
-        existing.count++;
         userTotals.set(entry.member_id, existing);
       }
 
       // Last 7 days daily totals
       const dayMap = new Map<string, number>();
       for (const e of weekResult.data ?? []) {
-        const key = new Date(e.started_at).toISOString().split('T')[0];
+        const key = localDateKey(new Date(e.started_at));
         const secs = (new Date(e.stopped_at!).getTime() - new Date(e.started_at).getTime()) / 1000;
         dayMap.set(key, (dayMap.get(key) ?? 0) + secs);
       }
@@ -85,7 +89,7 @@ export default function DashboardPage() {
       for (let i = 6; i >= 0; i--) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
-        const key = d.toISOString().split('T')[0];
+        const key = localDateKey(d);
         bars.push({
           label: d.toLocaleDateString(undefined, { weekday: 'short' }),
           hours: Math.round(((dayMap.get(key) ?? 0) / 3600) * 10) / 10,

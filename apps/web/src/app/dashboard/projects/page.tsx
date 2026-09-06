@@ -41,7 +41,8 @@ export default function ProjectsPage() {
   }
 
   async function toggleProject(id: string, isActive: boolean) {
-    await supabase.from('hg_projects').update({ is_active: !isActive }).eq('id', id);
+    if (!member) return;
+    await supabase.from('hg_projects').update({ is_active: !isActive }).eq('id', id).eq('organization_id', member.organizationId);
     loadProjects();
   }
 

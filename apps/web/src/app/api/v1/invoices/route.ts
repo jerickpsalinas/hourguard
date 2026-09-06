@@ -27,17 +27,50 @@ export async function POST(request: NextRequest) {
   const auth = await authenticateApiKey(request);
   if (auth instanceof NextResponse) return auth;
 
-  const body = await request.json();
-  const { title, from_date, to_date, project_id, hourly_rate } = body;
+  let body: any;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
-  if (!from_date || !to_date || !hourly_rate) {
+  const { title, from_date, to_date, project_id } = body;
+  const hourly_rate = Number(body.hourly_rate);
+
+  if (!from_date || !to_date) {
     return NextResponse.json(
-      { error: 'from_date, to_date, and hourly_rate are required' },
+      { error: 'from_date and to_date are required' },
+      { status: 400 }
+    );
+  }
+
+  if (!Number.isFinite(hourly_rate) || hourly_rate < 0) {
+    return NextResponse.json(
+      { error: 'hourly_rate must be a non-negative number' },
       { status: 400 }
     );
   }
 
   const supabase = createServiceClient();
+
+  // hg_invoices.created_by is NOT NULL and references hg_members — an API key is
+  // not a member, so attribute the invoice to an owner/manager of the org.
+  const { data: creator } = await supabase
+    .from('hg_members')
+    .select('id, role')
+    .eq('organization_id', auth.organizationId)
+    .in('role', ['owner', 'manager'])
+    .eq('is_active', true)
+    .order('role', { ascending: true }) // 'manager' < 'owner' alphabetically; either is acceptable
+    .limit(1)
+    .maybeSingle();
+
+  if (!creator) {
+    return NextResponse.json(
+      { error: 'No owner or manager member found to attribute the invoice to' },
+      { status: 409 }
+    );
+  }
 
   let query = supabase
     .from('hg_time_entries')
@@ -63,7 +96,7 @@ export async function POST(request: NextRequest) {
     .insert({
       organization_id: auth.organizationId,
       project_id: project_id || null,
-      created_by: auth.apiKeyId,
+      created_by: creator.id,
       title: title || `Invoice ${from_date} to ${to_date}`,
       from_date,
       to_date,

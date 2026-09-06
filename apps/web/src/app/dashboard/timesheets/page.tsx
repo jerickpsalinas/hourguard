@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonTable } from '@/components/skeleton';
 import { toCsv, downloadCsv } from '@/lib/csv';
+import { localDateKey, localRangeBounds } from '@/lib/dates';
 
 export default function TimesheetsPage() {
   const [entries, setEntries] = useState<any[]>([]);
@@ -12,9 +13,9 @@ export default function TimesheetsPage() {
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
-    return d.toISOString().split('T')[0];
+    return localDateKey(d);
   });
-  const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [toDate, setToDate] = useState(() => localDateKey(new Date()));
   const supabase = createClient();
   const { member } = useAuth();
 
@@ -23,12 +24,13 @@ export default function TimesheetsPage() {
     setLoading(true);
 
     (async () => {
+      const { startISO, endISO } = localRangeBounds(fromDate, toDate);
       const { data } = await supabase
         .from('hg_time_entries')
         .select('*, hg_members(full_name), hg_projects(name)')
         .eq('organization_id', member.organizationId)
-        .gte('started_at', `${fromDate}T00:00:00`)
-        .lte('started_at', `${toDate}T23:59:59`)
+        .gte('started_at', startISO)
+        .lte('started_at', endISO)
         .order('started_at', { ascending: false })
         .limit(100);
 

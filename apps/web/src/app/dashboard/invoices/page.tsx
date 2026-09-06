@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonRows } from '@/components/skeleton';
+import { localRangeBounds } from '@/lib/dates';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -51,15 +52,23 @@ export default function InvoicesPage() {
   async function generateInvoice(e: React.FormEvent) {
     e.preventDefault();
     if (!member) return;
+
+    const rate = parseFloat(hourlyRate);
+    if (!Number.isFinite(rate) || rate < 0) {
+      alert('Enter a valid hourly rate.');
+      return;
+    }
+
     setGenerating(true);
 
+    const { startISO, endISO } = localRangeBounds(fromDate, toDate);
     let query = supabase
       .from('hg_time_entries')
       .select('started_at, stopped_at')
       .eq('organization_id', member.organizationId)
       .not('stopped_at', 'is', null)
-      .gte('started_at', `${fromDate}T00:00:00`)
-      .lte('started_at', `${toDate}T23:59:59`);
+      .gte('started_at', startISO)
+      .lte('started_at', endISO);
 
     if (projectId) query = query.eq('project_id', projectId);
 
@@ -70,7 +79,6 @@ export default function InvoicesPage() {
     }, 0);
 
     const totalHours = totalSeconds / 3600;
-    const rate = parseFloat(hourlyRate);
     const totalAmount = totalHours * rate;
 
     const { error: insertError } = await supabase.from('hg_invoices').insert({

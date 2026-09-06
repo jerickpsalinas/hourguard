@@ -38,9 +38,17 @@ app.whenReady().then(() => {
   createWindow();
 
   syncManager = new SyncManager();
-  tracker = new Tracker(syncManager);
 
-  setupTray(mainWindow!, tracker);
+  let trayControls: { refresh: () => void } | null = null;
+
+  tracker = new Tracker(syncManager, (state) => {
+    // Keep the renderer and tray in sync with automatic state changes
+    // (idle auto-pause / auto-resume), not just user clicks.
+    mainWindow?.webContents.send('tracker:state', state);
+    trayControls?.refresh();
+  });
+
+  trayControls = setupTray(mainWindow!, tracker);
 
   ipcMain.handle('auth:login', async (_e, email: string, password: string) => {
     return syncManager!.login(email, password);

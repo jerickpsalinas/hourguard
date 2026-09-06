@@ -30,6 +30,18 @@ export default function SignupPage() {
       return;
     }
 
+    // The following inserts are RLS-guarded and need an authenticated session.
+    // signUp only returns one when email confirmation is disabled; otherwise
+    // establish it now, or tell the user to confirm their email first.
+    if (!authData.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        setError('Account created. Please confirm your email, then sign in to finish setting up your organization.');
+        setLoading(false);
+        return;
+      }
+    }
+
     const { data: org, error: orgError } = await supabase
       .from('organizations')
       .insert({ name: orgName, access_type: ['hourguard'] })

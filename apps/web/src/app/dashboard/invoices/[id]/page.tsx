@@ -39,7 +39,8 @@ export default function InvoiceDetailPage() {
     const { error } = await supabase
       .from('hg_invoices')
       .update({ status: 'finalized' })
-      .eq('id', invoice.id);
+      .eq('id', invoice.id)
+      .eq('organization_id', member!.organizationId);
     setBusy(false);
     if (error) {
       alert('Failed to finalize invoice.');
@@ -54,7 +55,8 @@ export default function InvoiceDetailPage() {
     const { error } = await supabase
       .from('hg_invoices')
       .update({ status: 'draft' })
-      .eq('id', invoice.id);
+      .eq('id', invoice.id)
+      .eq('organization_id', member!.organizationId);
     setBusy(false);
     if (error) {
       alert('Failed to update invoice.');

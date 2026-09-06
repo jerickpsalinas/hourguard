@@ -12,6 +12,7 @@ declare global {
       stopTracking: () => Promise<void>;
       getStatus: () => Promise<any>;
       getProjects: () => Promise<any[]>;
+      onTrackerState: (cb: (state: string) => void) => () => void;
     };
   }
 }

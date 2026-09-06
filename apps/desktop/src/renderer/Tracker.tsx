@@ -22,49 +22,56 @@ function formatTime(seconds: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
+type TrackerState = 'idle' | 'tracking' | 'paused';
+
 export default function Tracker({ onLogout }: { onLogout: () => void }) {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProject, setSelectedProject] = useState<string>('');
-  const [tracking, setTracking] = useState(false);
+  const [state, setState] = useState<TrackerState>('idle');
   const [elapsed, setElapsed] = useState(0);
   const [activity, setActivity] = useState({ keyboard: 0, mouse: 0 });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const tracking = state === 'tracking';
+
   useEffect(() => {
     window.api.getProjects().then(setProjects);
     window.api.getStatus().then((status) => {
-      if (status.state === 'tracking') {
-        setTracking(true);
-        if (status.intervalStart) {
-          const diff = Math.floor((Date.now() - new Date(status.intervalStart).getTime()) / 1000);
-          setElapsed(diff);
-        }
+      setState(status.state);
+      if (status.state === 'tracking' && status.intervalStart) {
+        const diff = Math.floor((Date.now() - new Date(status.intervalStart).getTime()) / 1000);
+        setElapsed(diff);
       }
     });
+
+    // React to state changes driven by the main process (idle auto-pause/resume, tray).
+    const unsubscribe = window.api.onTrackerState((s) => setState(s as TrackerState));
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
-    if (tracking) {
+    if (state === 'tracking') {
       timerRef.current = setInterval(() => {
         setElapsed((prev) => prev + 1);
         window.api.getStatus().then((s) => setActivity(s.activity));
       }, 1000);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
-      setElapsed(0);
+      // Reset the clock only when fully idle; keep it visible while paused.
+      if (state === 'idle') setElapsed(0);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [tracking]);
+  }, [state]);
 
   const toggle = async () => {
-    if (tracking) {
-      await window.api.stopTracking();
-      setTracking(false);
-    } else {
+    if (state === 'idle') {
+      setState('tracking');
       await window.api.startTracking(selectedProject || undefined);
-      setTracking(true);
+    } else {
+      setState('idle');
+      await window.api.stopTracking();
     }
   };
 
@@ -88,8 +95,8 @@ export default function Tracker({ onLogout }: { onLogout: () => void }) {
       </div>
 
       <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
-        <span style={{ ...styles.statusDot, background: tracking ? '#22c55e' : 'rgba(255,255,255,0.3)' }} />
-        {tracking ? 'Tracking' : 'Idle'}
+        <span style={{ ...styles.statusDot, background: state === 'tracking' ? '#22c55e' : state === 'paused' ? '#eab308' : 'rgba(255,255,255,0.3)' }} />
+        {state === 'tracking' ? 'Tracking' : state === 'paused' ? 'Paused (idle)' : 'Idle'}
       </div>
       <div style={styles.timer}>{formatTime(elapsed)}</div>
       <div style={styles.activity}>
@@ -97,7 +104,7 @@ export default function Tracker({ onLogout }: { onLogout: () => void }) {
         <span style={styles.pill}>🖱 {activity.mouse}</span>
       </div>
 
-      {!tracking && (
+      {state === 'idle' && (
         <select
           style={styles.select}
           value={selectedProject}
@@ -114,11 +121,11 @@ export default function Tracker({ onLogout }: { onLogout: () => void }) {
         onClick={toggle}
         style={{
           ...styles.startBtn,
-          background: tracking ? '#ef4444' : '#22c55e',
-          boxShadow: tracking ? '0 8px 32px rgba(239,68,68,0.4)' : '0 8px 32px rgba(34,197,94,0.35)',
+          background: state !== 'idle' ? '#ef4444' : '#22c55e',
+          boxShadow: state !== 'idle' ? '0 8px 32px rgba(239,68,68,0.4)' : '0 8px 32px rgba(34,197,94,0.35)',
         }}
       >
-        {tracking ? 'STOP' : 'START'}
+        {state !== 'idle' ? 'STOP' : 'START'}
       </button>
     </div>
   );

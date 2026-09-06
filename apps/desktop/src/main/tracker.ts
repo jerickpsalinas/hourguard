@@ -14,25 +14,46 @@ export class Tracker {
   private currentEntryId: string | null = null;
   private projectId: string | null = null;
   private intervalStart: Date | null = null;
+  private autoPaused = false;
   private activityMonitor: ActivityMonitor;
   private idleDetector: IdleDetector;
   private sync: SyncManager;
+  private onStateChange: (state: TrackerState) => void;
 
-  constructor(sync: SyncManager) {
+  constructor(sync: SyncManager, onStateChange: (state: TrackerState) => void = () => {}) {
     this.sync = sync;
+    this.onStateChange = onStateChange;
     this.activityMonitor = new ActivityMonitor();
-    this.idleDetector = new IdleDetector((idleSeconds) => {
-      if (idleSeconds > 300 && this.state === 'tracking') {
-        this.pause();
+    this.idleDetector = new IdleDetector(
+      () => {
+        // User went idle while tracking — pause and remember it was automatic.
+        if (this.state === 'tracking') {
+          this.autoPaused = true;
+          this.pause();
+        }
+      },
+      () => {
+        // User returned — resume only if we auto-paused (never override a manual stop).
+        if (this.state === 'paused' && this.autoPaused) {
+          this.autoPaused = false;
+          this.resume();
+        }
       }
-    });
+    );
+  }
+
+  private setState(state: TrackerState) {
+    if (this.state === state) return;
+    this.state = state;
+    this.onStateChange(state);
   }
 
   async start(projectId?: string) {
     if (this.state === 'tracking') return;
 
     this.projectId = projectId ?? null;
-    this.state = 'tracking';
+    this.autoPaused = false;
+    this.setState('tracking');
     this.activityMonitor.start();
     this.idleDetector.start();
     this.intervalStart = new Date();
@@ -47,19 +68,24 @@ export class Tracker {
     this.intervalTimer = setInterval(() => this.onInterval(), INTERVAL_MS);
   }
 
-  stop() {
+  async stop() {
     if (this.state === 'idle') return;
 
-    this.finalizeInterval();
+    this.autoPaused = false;
+    await this.finalizeInterval();
     this.cleanup();
-    this.state = 'idle';
+    this.setState('idle');
   }
 
   pause() {
     if (this.state !== 'tracking') return;
 
     this.finalizeInterval();
-    this.state = 'paused';
+    this.setState('paused');
+
+    // Clear the finalized interval so a subsequent stop() can't re-finalize it.
+    this.currentEntryId = null;
+    this.intervalStart = null;
 
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer);

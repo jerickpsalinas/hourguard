@@ -5,8 +5,21 @@ import { join } from 'path';
 import { app } from 'electron';
 import type { Database as DbTypes } from '@hourguard/shared';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
+// electron-vite statically injects MAIN_VITE_* vars into the main bundle at
+// build time (import.meta.env). process.env is only populated in the dev shell
+// and is empty in a packaged app, so import.meta.env must be the primary source.
+const SUPABASE_URL =
+  import.meta.env.MAIN_VITE_SUPABASE_URL || process.env.MAIN_VITE_SUPABASE_URL || '';
+const SUPABASE_KEY =
+  import.meta.env.MAIN_VITE_SUPABASE_ANON_KEY || process.env.MAIN_VITE_SUPABASE_ANON_KEY || '';
+
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  // Fail loud in dev; a packaged build without these baked in cannot talk to Supabase.
+  console.error(
+    '[Hourguard] Missing MAIN_VITE_SUPABASE_URL / MAIN_VITE_SUPABASE_ANON_KEY. ' +
+      'Set them in .env before building the desktop app.'
+  );
+}
 
 export class SyncManager {
   private supabase: SupabaseClient<DbTypes>;

@@ -81,6 +81,17 @@ export default function InvitePage() {
       return;
     }
 
+    // Profile inserts below are RLS-guarded and require a session. signUp only
+    // returns one when email confirmation is off; otherwise establish it now.
+    if (!authData.session) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError) {
+        setError('Account created. Please confirm your email, then reopen this invite link to join.');
+        setSubmitting(false);
+        return;
+      }
+    }
+
     const { error: portalError } = await supabase.from('portal_users').insert({
       auth_user_id: authData.user.id,
       organization_id: invite.organization_id,

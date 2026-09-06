@@ -57,8 +57,9 @@ export default function SettingsPage() {
   }
 
   async function revokeKey(id: string, name: string) {
+    if (!member) return;
     if (!confirm(`Revoke API key "${name}"? This cannot be undone.`)) return;
-    await supabase.from('hg_api_keys').update({ is_active: false }).eq('id', id);
+    await supabase.from('hg_api_keys').update({ is_active: false }).eq('id', id).eq('organization_id', member.organizationId);
     loadApiKeys();
   }
 

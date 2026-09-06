@@ -3,11 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
+import { localDateKey, localDayBounds } from '@/lib/dates';
 
 export default function ScreenshotsPage() {
   const [screenshots, setScreenshots] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => localDateKey(new Date()));
   const [expandedUrl, setExpandedUrl] = useState<string | null>(null);
   const supabase = createClient();
   const { member } = useAuth();
@@ -17,12 +18,13 @@ export default function ScreenshotsPage() {
     setLoading(true);
 
     (async () => {
+      const { startISO, endISO } = localDayBounds(selectedDate);
       const { data } = await supabase
         .from('hg_screenshots')
         .select('*, hg_members(full_name)')
         .eq('organization_id', member.organizationId)
-        .gte('captured_at', `${selectedDate}T00:00:00`)
-        .lte('captured_at', `${selectedDate}T23:59:59`)
+        .gte('captured_at', startISO)
+        .lte('captured_at', endISO)
         .order('captured_at', { ascending: false })
         .limit(50);
 
