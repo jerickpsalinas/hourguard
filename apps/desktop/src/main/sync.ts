@@ -11,7 +11,8 @@ const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY || '';
 export class SyncManager {
   private supabase: SupabaseClient<DbTypes>;
   private localDb: Database.Database;
-  private userId: string | null = null;
+  private authUserId: string | null = null;
+  private memberId: string | null = null;
   private orgId: string | null = null;
 
   constructor() {
@@ -53,7 +54,8 @@ export class SyncManager {
   }
 
   async logout() {
-    this.userId = null;
+    this.authUserId = null;
+    this.memberId = null;
     this.orgId = null;
     await this.supabase.auth.signOut();
   }
@@ -89,21 +91,22 @@ export class SyncManager {
     const { data: { user } } = await this.supabase.auth.getUser();
     if (!user) return;
 
-    this.userId = user.id;
+    this.authUserId = user.id;
 
-    const { data: profile } = await this.supabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', user.id)
+    const { data: member } = await this.supabase
+      .from('hg_members')
+      .select('id, organization_id')
+      .eq('auth_user_id', user.id)
       .single();
 
-    this.orgId = profile?.organization_id ?? null;
+    this.memberId = member?.id ?? null;
+    this.orgId = member?.organization_id ?? null;
   }
 
   async getProjects() {
     if (!this.orgId) return [];
     const { data } = await this.supabase
-      .from('projects')
+      .from('hg_projects')
       .select('*')
       .eq('organization_id', this.orgId)
       .eq('is_active', true);
@@ -111,17 +114,17 @@ export class SyncManager {
   }
 
   async createTimeEntry(startedAt: string, projectId: string | null): Promise<string> {
-    if (!this.userId || !this.orgId) throw new Error('Not authenticated');
+    if (!this.memberId || !this.orgId) throw new Error('Not authenticated');
 
     const entry = {
-      user_id: this.userId,
+      member_id: this.memberId,
       organization_id: this.orgId,
       project_id: projectId,
       started_at: startedAt,
     };
 
     const { data, error } = await this.supabase
-      .from('time_entries')
+      .from('hg_time_entries')
       .insert(entry)
       .select('id')
       .single();
@@ -147,7 +150,7 @@ export class SyncManager {
     }
   ) {
     const { error } = await this.supabase
-      .from('time_entries')
+      .from('hg_time_entries')
       .update(updates)
       .eq('id', id);
 
@@ -163,9 +166,9 @@ export class SyncManager {
     buffer: Buffer,
     activityPercent: number
   ) {
-    if (!this.userId || !this.orgId) return;
+    if (!this.memberId || !this.orgId) return;
 
-    const filename = `${this.orgId}/${this.userId}/${Date.now()}.jpg`;
+    const filename = `${this.orgId}/${this.memberId}/${Date.now()}.jpg`;
 
     const { error: uploadError } = await this.supabase.storage
       .from('screenshots')
@@ -186,9 +189,9 @@ export class SyncManager {
       return;
     }
 
-    await this.supabase.from('screenshots').insert({
+    await this.supabase.from('hg_screenshots').insert({
       time_entry_id: timeEntryId,
-      user_id: this.userId,
+      member_id: this.memberId,
       organization_id: this.orgId,
       storage_path: filename,
       captured_at: new Date().toISOString(),
@@ -206,11 +209,11 @@ export class SyncManager {
       let success = false;
 
       if (row.type === 'time_entry') {
-        const { error } = await this.supabase.from('time_entries').upsert(payload);
+        const { error } = await this.supabase.from('hg_time_entries').upsert(payload);
         success = !error;
       } else if (row.type === 'time_entry_update') {
         const { id, ...updates } = payload;
-        const { error } = await this.supabase.from('time_entries').update(updates).eq('id', id);
+        const { error } = await this.supabase.from('hg_time_entries').update(updates).eq('id', id);
         success = !error;
       } else if (row.type === 'screenshot') {
         const buf = Buffer.from(payload.buffer, 'base64');
@@ -218,9 +221,9 @@ export class SyncManager {
           .from('screenshots')
           .upload(payload.filename, buf, { contentType: 'image/jpeg' });
         if (!error) {
-          await this.supabase.from('screenshots').insert({
+          await this.supabase.from('hg_screenshots').insert({
             time_entry_id: payload.time_entry_id,
-            user_id: this.userId!,
+            member_id: this.memberId!,
             organization_id: this.orgId!,
             storage_path: payload.filename,
             captured_at: new Date().toISOString(),
