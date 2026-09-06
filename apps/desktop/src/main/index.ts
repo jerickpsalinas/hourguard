@@ -50,6 +50,11 @@ app.whenReady().then(() => {
 
   trayControls = setupTray(mainWindow!, tracker);
 
+  // Periodically retry syncing anything queued while offline.
+  setInterval(() => {
+    syncManager?.flushPendingEntries().catch(() => {});
+  }, 2 * 60 * 1000);
+
   ipcMain.handle('auth:login', async (_e, email: string, password: string) => {
     return syncManager!.login(email, password);
   });

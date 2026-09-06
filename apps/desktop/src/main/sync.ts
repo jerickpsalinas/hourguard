@@ -63,6 +63,8 @@ export class SyncManager {
     }
 
     await this.loadProfile();
+    // Sync anything queued while offline (fire-and-forget).
+    this.flushPendingEntries().catch(() => {});
     return { user: data.user };
   }
 
@@ -77,6 +79,7 @@ export class SyncManager {
     const { data } = await this.supabase.auth.getSession();
     if (data.session) {
       await this.loadProfile();
+      this.flushPendingEntries().catch(() => {});
       return { user: data.session.user };
     }
 
@@ -93,6 +96,7 @@ export class SyncManager {
       });
       if (refreshData.session) {
         await this.loadProfile();
+        this.flushPendingEntries().catch(() => {});
         return { user: refreshData.session.user };
       }
     }
@@ -213,14 +217,25 @@ export class SyncManager {
   }
 
   async flushPendingEntries() {
+    // Screenshot rows need an authenticated member/org context to insert.
+    if (!this.memberId || !this.orgId) return;
+
     const rows = this.localDb.prepare(
       "select * from pending_entries where type != 'token' order by created_at"
     ).all() as Array<{ id: string; payload: string; type: string }>;
 
     for (const row of rows) {
-      const payload = JSON.parse(row.payload);
+      let payload: any;
+      try {
+        payload = JSON.parse(row.payload);
+      } catch {
+        // Corrupt row — drop it so it can't block the queue forever.
+        this.localDb.prepare("delete from pending_entries where id = ?").run(row.id);
+        continue;
+      }
       let success = false;
 
+      try {
       if (row.type === 'time_entry') {
         const { error } = await this.supabase.from('hg_time_entries').upsert(payload);
         success = !error;
@@ -244,6 +259,10 @@ export class SyncManager {
           });
           success = true;
         }
+      }
+      } catch {
+        // Network/transient error — leave the row queued for the next flush.
+        success = false;
       }
 
       if (success) {
