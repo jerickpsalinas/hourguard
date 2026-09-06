@@ -7,6 +7,7 @@ import { SyncManager } from './sync';
 let mainWindow: BrowserWindow | null = null;
 let tracker: Tracker | null = null;
 let syncManager: SyncManager | null = null;
+let quitting = false;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -27,12 +28,26 @@ function createWindow() {
   }
 
   mainWindow.on('close', (e) => {
-    if (tracker?.isTracking()) {
+    // Keep running in the tray while tracking, but never block an actual quit.
+    if (tracker?.isTracking() && !quitting) {
       e.preventDefault();
       mainWindow?.hide();
     }
   });
 }
+
+// On quit, finalize the current interval before the process exits so the last
+// interval's stopped_at/activity isn't lost.
+app.on('before-quit', (e) => {
+  if (quitting) return;
+  if (tracker?.isTracking()) {
+    e.preventDefault();
+    quitting = true;
+    tracker.stop().finally(() => app.quit());
+  } else {
+    quitting = true;
+  }
+});
 
 app.whenReady().then(() => {
   createWindow();
@@ -60,7 +75,9 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('auth:logout', async () => {
-    tracker!.stop();
+    // Finalize the current interval before signing out, or the write races
+    // session teardown and is lost.
+    await tracker!.stop();
     return syncManager!.logout();
   });
 

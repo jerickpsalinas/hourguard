@@ -15,6 +15,7 @@ export class Tracker {
   private projectId: string | null = null;
   private intervalStart: Date | null = null;
   private autoPaused = false;
+  private startGen = 0;
   private activityMonitor: ActivityMonitor;
   private idleDetector: IdleDetector;
   private sync: SyncManager;
@@ -51,6 +52,7 @@ export class Tracker {
   async start(projectId?: string) {
     if (this.state === 'tracking') return;
 
+    const gen = ++this.startGen;
     this.projectId = projectId ?? null;
     this.autoPaused = false;
     this.setState('tracking');
@@ -58,11 +60,25 @@ export class Tracker {
     this.idleDetector.start();
     this.intervalStart = new Date();
 
-    this.currentEntryId = await this.sync.createTimeEntry(
+    const entryId = await this.sync.createTimeEntry(
       this.intervalStart.toISOString(),
       this.projectId
     );
 
+    // A stop()/pause() may have run while the create was in flight (both bump
+    // startGen). If so, this start is stale: finalize the orphaned entry and
+    // don't arm the timers (which cleanup() already cleared and would leak).
+    if (this.startGen !== gen) {
+      await this.sync.updateTimeEntry(entryId, {
+        stopped_at: new Date().toISOString(),
+        keyboard_events: 0,
+        mouse_events: 0,
+        activity_percent: 0,
+      });
+      return;
+    }
+
+    this.currentEntryId = entryId;
     this.scheduleScreenshot();
 
     this.intervalTimer = setInterval(() => this.onInterval(), INTERVAL_MS);
@@ -71,6 +87,7 @@ export class Tracker {
   async stop() {
     if (this.state === 'idle') return;
 
+    this.startGen++; // invalidate any start() whose create is still in flight
     this.autoPaused = false;
     await this.finalizeInterval();
     this.cleanup();
@@ -80,6 +97,7 @@ export class Tracker {
   pause() {
     if (this.state !== 'tracking') return;
 
+    this.startGen++; // invalidate any start() whose create is still in flight
     this.finalizeInterval();
     this.setState('paused');
 

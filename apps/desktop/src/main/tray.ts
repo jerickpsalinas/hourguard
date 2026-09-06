@@ -1,4 +1,4 @@
-import { Tray, Menu, BrowserWindow, nativeImage } from 'electron';
+import { app, Tray, Menu, BrowserWindow, nativeImage } from 'electron';
 import { Tracker } from './tracker';
 
 let tray: Tray | null = null;
@@ -30,10 +30,8 @@ export function setupTray(mainWindow: BrowserWindow, tracker: Tracker) {
       { type: 'separator' },
       {
         label: 'Quit',
-        click: () => {
-          tracker.stop();
-          mainWindow.destroy();
-        },
+        // Route through app.quit() so before-quit finalizes the current interval.
+        click: () => app.quit(),
       },
     ]);
     tray!.setContextMenu(menu);

@@ -55,12 +55,7 @@ export class SyncManager {
 
     if (error) return { error: error.message };
 
-    if (data.session?.refresh_token && safeStorage.isEncryptionAvailable()) {
-      const encrypted = safeStorage.encryptString(data.session.refresh_token);
-      this.localDb.prepare(
-        "insert or replace into pending_entries (id, payload, type) values ('refresh_token', ?, 'token')"
-      ).run(encrypted.toString('base64'));
-    }
+    this.persistRefreshToken(data.session?.refresh_token);
 
     await this.loadProfile();
     // Sync anything queued while offline (fire-and-forget).
@@ -95,6 +90,9 @@ export class SyncManager {
         refresh_token: refreshToken,
       });
       if (refreshData.session) {
+        // Supabase rotates refresh tokens on use — persist the new one, or the
+        // next cold start would send a consumed token and lose the session.
+        this.persistRefreshToken(refreshData.session.refresh_token);
         await this.loadProfile();
         this.flushPendingEntries().catch(() => {});
         return { user: refreshData.session.user };
@@ -102,6 +100,14 @@ export class SyncManager {
     }
 
     return { user: null };
+  }
+
+  private persistRefreshToken(token: string | undefined | null) {
+    if (!token || !safeStorage.isEncryptionAvailable()) return;
+    const encrypted = safeStorage.encryptString(token);
+    this.localDb.prepare(
+      "insert or replace into pending_entries (id, payload, type) values ('refresh_token', ?, 'token')"
+    ).run(encrypted.toString('base64'));
   }
 
   private async loadProfile() {
@@ -133,28 +139,27 @@ export class SyncManager {
   async createTimeEntry(startedAt: string, projectId: string | null): Promise<string> {
     if (!this.memberId || !this.orgId) throw new Error('Not authenticated');
 
+    // Generate the id up front and use it both online and offline. If the insert
+    // commits but the response is lost, the retry upserts the same id instead of
+    // creating a duplicate row.
+    const id = crypto.randomUUID();
     const entry = {
+      id,
       member_id: this.memberId,
       organization_id: this.orgId,
       project_id: projectId,
       started_at: startedAt,
     };
 
-    const { data, error } = await this.supabase
-      .from('hg_time_entries')
-      .insert(entry)
-      .select('id')
-      .single();
+    const { error } = await this.supabase.from('hg_time_entries').insert(entry);
 
-    if (error || !data) {
-      const id = crypto.randomUUID();
+    if (error) {
       this.localDb.prepare(
         "insert into pending_entries (id, payload, type) values (?, ?, 'time_entry')"
-      ).run(id, JSON.stringify({ ...entry, id }));
-      return id;
+      ).run(id, JSON.stringify(entry));
     }
 
-    return data.id;
+    return id;
   }
 
   async updateTimeEntry(
@@ -187,11 +192,7 @@ export class SyncManager {
 
     const filename = `${this.orgId}/${this.memberId}/${Date.now()}.jpg`;
 
-    const { error: uploadError } = await this.supabase.storage
-      .from('screenshots')
-      .upload(filename, buffer, { contentType: 'image/jpeg' });
-
-    if (uploadError) {
+    const queue = () =>
       this.localDb.prepare(
         "insert into pending_entries (id, payload, type) values (?, ?, 'screenshot')"
       ).run(
@@ -201,12 +202,22 @@ export class SyncManager {
           buffer: buffer.toString('base64'),
           activity_percent: activityPercent,
           filename,
+          captured_at: new Date().toISOString(),
         })
       );
+
+    const { error: uploadError } = await this.supabase.storage
+      .from('screenshots')
+      .upload(filename, buffer, { contentType: 'image/jpeg', upsert: true });
+
+    if (uploadError) {
+      queue();
       return;
     }
 
-    await this.supabase.from('hg_screenshots').insert({
+    // A failed row insert after a successful upload must also be retried, or the
+    // uploaded object would be orphaned.
+    const { error: insertError } = await this.supabase.from('hg_screenshots').insert({
       time_entry_id: timeEntryId,
       member_id: this.memberId,
       organization_id: this.orgId,
@@ -214,14 +225,15 @@ export class SyncManager {
       captured_at: new Date().toISOString(),
       activity_percent: activityPercent,
     });
+    if (insertError) queue();
   }
 
   async flushPendingEntries() {
-    // Screenshot rows need an authenticated member/org context to insert.
-    if (!this.memberId || !this.orgId) return;
-
+    // Order by rowid (monotonic insertion order) so a parent time_entry is
+    // always processed before its screenshot/update — created_at is only
+    // second-resolution and can't break ties.
     const rows = this.localDb.prepare(
-      "select * from pending_entries where type != 'token' order by created_at"
+      "select rowid, * from pending_entries where type != 'token' order by rowid"
     ).all() as Array<{ id: string; payload: string; type: string }>;
 
     for (const row of rows) {
@@ -233,6 +245,11 @@ export class SyncManager {
         this.localDb.prepare("delete from pending_entries where id = ?").run(row.id);
         continue;
       }
+
+      // Screenshot rows need an authenticated member/org; time_entry and
+      // time_entry_update rows do not, so still flush those when profile is unset.
+      if (row.type === 'screenshot' && (!this.memberId || !this.orgId)) continue;
+
       let success = false;
 
       try {
@@ -247,17 +264,17 @@ export class SyncManager {
         const buf = Buffer.from(payload.buffer, 'base64');
         const { error } = await this.supabase.storage
           .from('screenshots')
-          .upload(payload.filename, buf, { contentType: 'image/jpeg' });
+          .upload(payload.filename, buf, { contentType: 'image/jpeg', upsert: true });
         if (!error) {
-          await this.supabase.from('hg_screenshots').insert({
+          const { error: insertError } = await this.supabase.from('hg_screenshots').insert({
             time_entry_id: payload.time_entry_id,
             member_id: this.memberId!,
             organization_id: this.orgId!,
             storage_path: payload.filename,
-            captured_at: new Date().toISOString(),
+            captured_at: payload.captured_at ?? new Date().toISOString(),
             activity_percent: payload.activity_percent,
           });
-          success = true;
+          success = !insertError;
         }
       }
       } catch {
