@@ -23,6 +23,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!member) return;
+    let ignore = false;
+    setLoading(true);
     const orgId = member.organizationId;
     const now = new Date();
     const todayBounds = localDayBounds(localDateKey(now));
@@ -57,6 +59,8 @@ export default function DashboardPage() {
           .eq('is_active', true),
       ]);
 
+      if (ignore) return;
+
       const memberCount = membersResult.count;
       const projectCount = projectsResult.count;
 
@@ -87,6 +91,8 @@ export default function DashboardPage() {
       });
       setLoading(false);
     })();
+
+    return () => { ignore = true; };
   }, [member]);
 
   const maxBar = Math.max(1, ...weekBars.map((b) => b.hours));

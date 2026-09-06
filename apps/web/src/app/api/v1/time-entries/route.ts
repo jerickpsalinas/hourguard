@@ -74,8 +74,8 @@ export async function GET(request: NextRequest) {
     .order('started_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  if (from) query = query.gte('started_at', `${from}T00:00:00`);
-  if (to) query = query.lte('started_at', `${to}T23:59:59`);
+  if (from) query = query.gte('started_at', `${from}T00:00:00.000Z`);
+  if (to) query = query.lte('started_at', `${to}T23:59:59.999Z`);
   if (memberId) query = query.eq('member_id', memberId);
   if (projectId) query = query.eq('project_id', projectId);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { localDateKey, localDayBounds } from '@/lib/dates';
@@ -18,10 +18,12 @@ export default function ScreenshotsPage() {
   const [expandedUrl, setExpandedUrl] = useState<string | null>(null);
   const supabase = createClient();
   const { member } = useAuth();
+  const reqSeq = useRef(0);
 
   const loadPage = useCallback(
     async (pageNum: number, append: boolean) => {
       if (!member) return;
+      const seq = ++reqSeq.current;
       if (append) setLoadingMore(true);
       else setLoading(true);
 
@@ -43,6 +45,8 @@ export default function ScreenshotsPage() {
         .createSignedUrls(rows.map((ss) => ss.storage_path), 3600);
       const withUrls = rows.map((ss, i) => ({ ...ss, url: signed?.[i]?.signedUrl }));
 
+      // Ignore a response that a newer request has superseded.
+      if (seq !== reqSeq.current) return;
       setScreenshots((prev) => (append ? [...prev, ...withUrls] : withUrls));
       setHasMore(rows.length === PAGE_SIZE);
       setPage(pageNum);

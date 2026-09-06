@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     .range(offset, offset + limit - 1);
 
   if (date) {
-    query = query.gte('captured_at', `${date}T00:00:00`).lte('captured_at', `${date}T23:59:59`);
+    query = query.gte('captured_at', `${date}T00:00:00.000Z`).lte('captured_at', `${date}T23:59:59.999Z`);
   }
   if (memberId) query = query.eq('member_id', memberId);
 

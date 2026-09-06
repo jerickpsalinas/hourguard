@@ -59,8 +59,8 @@ export async function POST(request: NextRequest) {
     .select('started_at, stopped_at')
     .eq('organization_id', auth.organizationId)
     .not('stopped_at', 'is', null)
-    .gte('started_at', `${from_date}T00:00:00`)
-    .lte('started_at', `${to_date}T23:59:59`);
+    .gte('started_at', `${from_date}T00:00:00.000Z`)
+    .lte('started_at', `${to_date}T23:59:59.999Z`);
   if (project_id) entriesQuery = entriesQuery.eq('project_id', project_id);
 
   // These three reads are independent — run them together.

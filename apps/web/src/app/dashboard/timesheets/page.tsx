@@ -40,8 +40,17 @@ export default function TimesheetsPage() {
     })();
   }, [member, isAdmin]);
 
+  // Filters hold IDs scoped to one org — clear them when the active org changes
+  // so a stale member/project id can't constrain the query to a foreign record.
+  const orgId = member?.organizationId;
+  useEffect(() => {
+    setMemberFilter('');
+    setProjectFilter('');
+  }, [orgId]);
+
   useEffect(() => {
     if (!member) return;
+    let ignore = false;
     setLoading(true);
 
     (async () => {
@@ -59,9 +68,12 @@ export default function TimesheetsPage() {
       if (projectFilter) query = query.eq('project_id', projectFilter);
 
       const { data } = await query;
+      if (ignore) return;
       setEntries(data ?? []);
       setLoading(false);
     })();
+
+    return () => { ignore = true; };
   }, [member, fromDate, toDate, memberFilter, projectFilter]);
 
   function exportCsv() {

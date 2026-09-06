@@ -21,6 +21,10 @@ Common responses:
 Pagination (GET list endpoints): `?page=1&limit=50` (limit capped at 100). Responses are
 `{ data, total, limit, offset }`.
 
+Date filters (`from`/`to`/`date`, `YYYY-MM-DD`) are bounded in **UTC** — the full
+UTC day `00:00:00.000Z`–`23:59:59.999Z`. (The dashboard bounds by the viewer's local
+day, so counts near midnight can differ between the API and the UI.)
+
 ---
 
 ## Time entries
