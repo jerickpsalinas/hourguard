@@ -5,9 +5,13 @@ Do this on a computer (Vercel dashboard + your DNS provider). Everything the
 build needs is already in the repo (`vercel.json`, `pnpm-lock.yaml`).
 
 Facts baked into the repo:
-- Monorepo: pnpm workspace + turbo. `packageManager: pnpm@9.9.0`.
-- `vercel.json` sets `buildCommand: pnpm build:web`, `outputDirectory:
-  apps/web/.next`, `framework: nextjs`, and a daily screenshot-cleanup cron.
+- Monorepo: pnpm workspace. `packageManager: pnpm@9.9.0`. The Next.js app is in
+  `apps/web`, so **Vercel's Root Directory must be `apps/web`** (that's where
+  `next` and the app's `package.json` live). `@hourguard/shared` is consumed as
+  source via `transpilePackages`, so it needs no build step.
+- `apps/web/vercel.json` sets the install command to skip the Electron desktop
+  package (its native `better-sqlite3` build isn't needed for the web app and
+  fails the build) and defines the daily screenshot-cleanup cron.
 - Auth redirect links use the request origin / `NEXT_PUBLIC_APP_URL`, so no
   hardcoded URLs to change.
 
@@ -26,12 +30,12 @@ Facts baked into the repo:
 ## 1. Import the project into Vercel
 
 1. Vercel → **Add New… → Project** → import the `hourguard` GitHub repo.
-2. **Root Directory:** leave as the repo root (`./`). Do NOT set it to
-   `apps/web` — the build script `pnpm build:web` and the pnpm workspace run
-   from the root, and `vercel.json` already points the output at
-   `apps/web/.next`.
-3. Framework / build / install: auto-detected from `vercel.json`
-   (Next.js, `pnpm build:web`, `pnpm install`). Leave the overrides off.
+2. **Root Directory:** set it to **`apps/web`** (click Edit → choose
+   `apps/web`). Vercel then detects Next.js and reads `apps/web/vercel.json`
+   for the install command + cron.
+3. Framework: **Next.js** (auto-detected). Build/Output: leave defaults
+   (`next build` / `.next`). Install command comes from `apps/web/vercel.json`
+   (`pnpm install --filter=!@hourguard/desktop`) — leave the override off.
 4. **Node.js version:** 20.x (Project → Settings → General → Node.js Version) —
    Next 14 requires ≥18.17; 20 is the safe default.
 

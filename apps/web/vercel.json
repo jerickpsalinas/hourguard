@@ -1,7 +1,4 @@
 {
-  "buildCommand": "pnpm build:web",
-  "outputDirectory": "apps/web/.next",
-  "framework": "nextjs",
   "installCommand": "pnpm install --filter=!@hourguard/desktop",
   "crons": [
     {
