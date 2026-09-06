@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { localDateKey, localDayBounds } from '@/lib/dates';
+import { EmptyState } from '@/components/empty-state';
 
 type DayBar = { label: string; hours: number };
 type ProjectTotal = { name: string; hours: number };
@@ -194,7 +195,11 @@ export default function DashboardPage() {
       <h2 className="text-lg font-display font-semibold mb-4">Activity by Member</h2>
       <div className="grid gap-3">
         {!loading && summary.length === 0 && (
-          <p className="text-white/40">No time tracked today.</p>
+          <EmptyState
+            icon="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            title="No time tracked today"
+            description="Once your team starts tracking with the desktop app, their hours and activity show up here."
+          />
         )}
         {summary.map((user, i) => (
           <div key={i} className="flex items-center justify-between glass-card p-4">

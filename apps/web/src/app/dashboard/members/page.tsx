@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { CopyButton } from '@/components/copy-button';
 import { SkeletonRows } from '@/components/skeleton';
+import { EmptyState } from '@/components/empty-state';
 
 export default function MembersPage() {
   const [members, setMembers] = useState<any[]>([]);
@@ -163,7 +164,11 @@ export default function MembersPage() {
       {loading ? (
         <SkeletonRows count={3} />
       ) : members.length === 0 ? (
-        <p className="text-white/40">No members yet.</p>
+        <EmptyState
+          icon="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+          title="No members yet"
+          description="Generate an invite link above to add your first team member."
+        />
       ) : (
         <div className="space-y-2">
           {members.map((m) => (

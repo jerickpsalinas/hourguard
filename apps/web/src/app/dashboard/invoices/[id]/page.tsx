@@ -16,6 +16,7 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   const isAdmin = member?.role === 'owner' || member?.role === 'manager';
 
@@ -34,37 +35,25 @@ export default function InvoiceDetailPage() {
     })();
   }, [member, id]);
 
-  async function finalize() {
+  async function setStatus(status: 'finalized' | 'draft') {
     if (!invoice) return;
     setBusy(true);
+    setActionError('');
     const { error } = await supabase
       .from('hg_invoices')
-      .update({ status: 'finalized' })
+      .update({ status })
       .eq('id', invoice.id)
       .eq('organization_id', member!.organizationId);
     setBusy(false);
     if (error) {
-      alert('Failed to finalize invoice.');
+      setActionError(status === 'finalized' ? 'Failed to finalize invoice.' : 'Failed to update invoice.');
       return;
     }
-    setInvoice({ ...invoice, status: 'finalized' });
+    setInvoice({ ...invoice, status });
   }
 
-  async function revertToDraft() {
-    if (!invoice) return;
-    setBusy(true);
-    const { error } = await supabase
-      .from('hg_invoices')
-      .update({ status: 'draft' })
-      .eq('id', invoice.id)
-      .eq('organization_id', member!.organizationId);
-    setBusy(false);
-    if (error) {
-      alert('Failed to update invoice.');
-      return;
-    }
-    setInvoice({ ...invoice, status: 'draft' });
-  }
+  const finalize = () => setStatus('finalized');
+  const revertToDraft = () => setStatus('draft');
 
   if (loading) {
     return <p className="text-white/40">Loading...</p>;
@@ -105,6 +94,12 @@ export default function InvoiceDetailPage() {
           </button>
         </div>
       </div>
+
+      {actionError && (
+        <div className="mb-4 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400 print:hidden">
+          {actionError}
+        </div>
+      )}
 
       {/* Invoice document — styled for both screen (glass) and print (white) */}
       <div className="glass-card p-8 print:bg-white print:text-black print:shadow-none print:border-0 max-w-3xl">

@@ -19,6 +19,7 @@ export default function InvoicesPage() {
   const [hourlyRate, setHourlyRate] = useState('50');
   const [title, setTitle] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [formMessage, setFormMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const supabase = createClient();
   const { member } = useAuth();
 
@@ -54,10 +55,11 @@ export default function InvoicesPage() {
   async function generateInvoice(e: React.FormEvent) {
     e.preventDefault();
     if (!member) return;
+    setFormMessage(null);
 
     const rate = parseFloat(hourlyRate);
     if (!Number.isFinite(rate) || rate < 0) {
-      alert('Enter a valid hourly rate.');
+      setFormMessage({ type: 'error', text: 'Enter a valid hourly rate.' });
       return;
     }
 
@@ -100,11 +102,15 @@ export default function InvoicesPage() {
     setGenerating(false);
 
     if (insertError) {
-      alert('Failed to generate invoice. Please try again.');
+      setFormMessage({ type: 'error', text: 'Failed to generate invoice. Please try again.' });
       return;
     }
 
     setTitle('');
+    setFormMessage({
+      type: 'success',
+      text: `Invoice created — ${totalHours.toFixed(1)}h totaling ${formatCurrency(Math.round(totalAmount * 100) / 100)}.`,
+    });
     loadInvoices();
   }
 
@@ -132,6 +138,11 @@ export default function InvoicesPage() {
         <button type="submit" disabled={generating} className="btn-brand px-4 py-2.5 text-sm">
           {generating ? 'Generating...' : 'Generate Invoice'}
         </button>
+        {formMessage && (
+          <div className={`rounded-xl p-3 text-sm ${formMessage.type === 'success' ? 'bg-green-500/10 border border-green-500/20 text-green-400' : 'bg-red-500/10 border border-red-500/20 text-red-400'}`}>
+            {formMessage.text}
+          </div>
+        )}
       </form>
 
       {!loading && invoices.length > 0 && (
