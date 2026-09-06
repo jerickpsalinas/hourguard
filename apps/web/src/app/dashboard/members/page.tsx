@@ -7,10 +7,14 @@ import { CopyButton } from '@/components/copy-button';
 import { SkeletonRows } from '@/components/skeleton';
 import { EmptyState } from '@/components/empty-state';
 import { useToast } from '@/components/toast';
+import { summarizeEntries, type RawEntry } from '@/lib/aggregate';
+import { formatHours } from '@/lib/format';
+import { localDateKey, localDayBounds } from '@/lib/dates';
 
 export default function MembersPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [invites, setInvites] = useState<any[]>([]);
+  const [hoursByMember, setHoursByMember] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'employee' | 'manager'>('employee');
@@ -24,8 +28,24 @@ export default function MembersPage() {
     if (member) {
       loadMembers();
       loadInvites();
+      loadWeekHours();
     }
   }, [member]);
+
+  async function loadWeekHours() {
+    if (!member) return;
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 6);
+    const { startISO } = localDayBounds(localDateKey(weekAgo));
+    const { data } = await supabase
+      .from('hg_time_entries')
+      .select('member_id, started_at, stopped_at, activity_percent')
+      .eq('organization_id', member.organizationId)
+      .not('stopped_at', 'is', null)
+      .gte('started_at', startISO);
+    const { members: perMember } = summarizeEntries((data ?? []) as unknown as RawEntry[]);
+    setHoursByMember(Object.fromEntries(perMember.map((m) => [m.memberId, m.hours])));
+  }
 
   async function loadMembers() {
     if (!member) return;
@@ -183,7 +203,10 @@ export default function MembersPage() {
             <div key={m.id} className="flex items-center justify-between glass-card p-4">
               <div>
                 <p className="font-medium">{m.full_name}</p>
-                <p className="text-xs text-white/40">{m.email}</p>
+                <p className="text-xs text-white/40">
+                  {m.email}
+                  <span className="text-white/30"> · {formatHours(hoursByMember[m.id] ?? 0)} this week</span>
+                </p>
               </div>
               <div className="flex items-center gap-3">
                 {m.id !== member?.id ? (
