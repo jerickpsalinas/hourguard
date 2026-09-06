@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { useAuth } from '@/lib/auth-context';
 
 export default function TimesheetsPage() {
   const [entries, setEntries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
     d.setDate(d.getDate() - 7);
@@ -12,33 +14,26 @@ export default function TimesheetsPage() {
   });
   const [toDate, setToDate] = useState(() => new Date().toISOString().split('T')[0]);
   const supabase = createClient();
+  const { member } = useAuth();
 
   useEffect(() => {
-    loadEntries();
-  }, [fromDate, toDate]);
-
-  async function loadEntries() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: member } = await supabase
-      .from('hg_members')
-      .select('organization_id')
-      .eq('auth_user_id', user.id)
-      .single();
     if (!member) return;
+    setLoading(true);
 
-    const { data } = await supabase
-      .from('hg_time_entries')
-      .select('*, hg_members(full_name), hg_projects(name)')
-      .eq('organization_id', member.organization_id)
-      .gte('started_at', `${fromDate}T00:00:00`)
-      .lte('started_at', `${toDate}T23:59:59`)
-      .order('started_at', { ascending: false })
-      .limit(100);
+    (async () => {
+      const { data } = await supabase
+        .from('hg_time_entries')
+        .select('*, hg_members(full_name), hg_projects(name)')
+        .eq('organization_id', member.organizationId)
+        .gte('started_at', `${fromDate}T00:00:00`)
+        .lte('started_at', `${toDate}T23:59:59`)
+        .order('started_at', { ascending: false })
+        .limit(100);
 
-    setEntries(data ?? []);
-  }
+      setEntries(data ?? []);
+      setLoading(false);
+    })();
+  }, [member, fromDate, toDate]);
 
   function formatDuration(start: string, end: string | null) {
     if (!end) return 'In progress';
@@ -77,15 +72,21 @@ export default function TimesheetsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {entries.map((entry) => (
-              <tr key={entry.id} className="hover:bg-slate-900/50">
-                <td className="px-4 py-3">{(entry as any).hg_members?.full_name}</td>
-                <td className="px-4 py-3 text-slate-400">{(entry as any).hg_projects?.name ?? '—'}</td>
-                <td className="px-4 py-3 text-slate-400">{new Date(entry.started_at).toLocaleDateString()}</td>
-                <td className="px-4 py-3">{formatDuration(entry.started_at, entry.stopped_at)}</td>
-                <td className="px-4 py-3">{entry.activity_percent}%</td>
-              </tr>
-            ))}
+            {loading ? (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Loading...</td></tr>
+            ) : entries.length === 0 ? (
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">No time entries for this period.</td></tr>
+            ) : (
+              entries.map((entry) => (
+                <tr key={entry.id} className="hover:bg-slate-900/50">
+                  <td className="px-4 py-3">{(entry as any).hg_members?.full_name}</td>
+                  <td className="px-4 py-3 text-slate-400">{(entry as any).hg_projects?.name ?? '—'}</td>
+                  <td className="px-4 py-3 text-slate-400">{new Date(entry.started_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">{formatDuration(entry.started_at, entry.stopped_at)}</td>
+                  <td className="px-4 py-3">{entry.activity_percent}%</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

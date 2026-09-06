@@ -2,48 +2,43 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { useAuth } from '@/lib/auth-context';
 
 export default function ScreenshotsPage() {
   const [screenshots, setScreenshots] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [expandedUrl, setExpandedUrl] = useState<string | null>(null);
   const supabase = createClient();
+  const { member } = useAuth();
 
   useEffect(() => {
-    loadScreenshots();
-  }, [selectedDate]);
-
-  async function loadScreenshots() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: member } = await supabase
-      .from('hg_members')
-      .select('organization_id')
-      .eq('auth_user_id', user.id)
-      .single();
     if (!member) return;
+    setLoading(true);
 
-    const { data } = await supabase
-      .from('hg_screenshots')
-      .select('*, hg_members(full_name)')
-      .eq('organization_id', member.organization_id)
-      .gte('captured_at', `${selectedDate}T00:00:00`)
-      .lte('captured_at', `${selectedDate}T23:59:59`)
-      .order('captured_at', { ascending: false })
-      .limit(50);
+    (async () => {
+      const { data } = await supabase
+        .from('hg_screenshots')
+        .select('*, hg_members(full_name)')
+        .eq('organization_id', member.organizationId)
+        .gte('captured_at', `${selectedDate}T00:00:00`)
+        .lte('captured_at', `${selectedDate}T23:59:59`)
+        .order('captured_at', { ascending: false })
+        .limit(50);
 
-    const withUrls = await Promise.all(
-      (data ?? []).map(async (ss) => {
-        const { data: urlData } = await supabase.storage
-          .from('screenshots')
-          .createSignedUrl(ss.storage_path, 3600);
-        return { ...ss, url: urlData?.signedUrl };
-      })
-    );
+      const withUrls = await Promise.all(
+        (data ?? []).map(async (ss) => {
+          const { data: urlData } = await supabase.storage
+            .from('screenshots')
+            .createSignedUrl(ss.storage_path, 3600);
+          return { ...ss, url: urlData?.signedUrl };
+        })
+      );
 
-    setScreenshots(withUrls);
-  }
+      setScreenshots(withUrls);
+      setLoading(false);
+    })();
+  }, [member, selectedDate]);
 
   return (
     <div>
@@ -54,7 +49,9 @@ export default function ScreenshotsPage() {
         onChange={(e) => setSelectedDate(e.target.value)}
         className="mb-6 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
       />
-      {screenshots.length === 0 ? (
+      {loading ? (
+        <p className="text-slate-400">Loading...</p>
+      ) : screenshots.length === 0 ? (
         <p className="text-slate-400">No screenshots for this date.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

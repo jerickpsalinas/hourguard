@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { AuthProvider, useAuth } from '@/lib/auth-context';
 
 const navItems = [
   { href: '/dashboard', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
@@ -15,36 +16,39 @@ const navItems = [
   { href: '/dashboard/settings', label: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
 ];
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-  const [member, setMember] = useState<any>(null);
-  const [orgName, setOrgName] = useState('');
+  const { member, orgName, loading, error } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push('/login'); return; }
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-600 border-t-blue-500" />
+          <p className="text-sm text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
-      const { data: m } = await supabase
-        .from('hg_members')
-        .select('id, full_name, role, organization_id')
-        .eq('auth_user_id', user.id)
-        .single();
+  if (error === 'not_authenticated') {
+    router.push('/login');
+    return null;
+  }
 
-      if (m) {
-        setMember(m);
-        const { data: org } = await supabase
-          .from('organizations')
-          .select('name')
-          .eq('id', m.organization_id)
-          .single();
-        if (org) setOrgName(org.name);
-      }
-    })();
-  }, []);
+  if (error === 'no_membership') {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center max-w-sm">
+          <p className="text-lg font-semibold mb-2">No membership found</p>
+          <p className="text-sm text-slate-400">Your account is not linked to any organization in Hourguard. Contact your administrator or sign up for a new organization.</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -97,7 +101,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="border-t border-slate-800 pt-4 mt-4">
           {member && (
             <>
-              <p className="text-sm font-medium">{member.full_name}</p>
+              <p className="text-sm font-medium">{member.fullName}</p>
               <p className="text-xs text-slate-400 capitalize">{member.role}</p>
             </>
           )}
@@ -129,5 +133,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <main className="flex-1 p-6 lg:p-8">{children}</main>
       </div>
     </div>
+  );
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </AuthProvider>
   );
 }

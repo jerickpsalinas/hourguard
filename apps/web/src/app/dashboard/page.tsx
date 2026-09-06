@@ -2,27 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { useAuth } from '@/lib/auth-context';
 
 export default function DashboardPage() {
   const supabase = createClient();
+  const { member } = useAuth();
   const [summary, setSummary] = useState<any[]>([]);
   const [stats, setStats] = useState({ members: 0, projects: 0, totalHours: 0 });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!member) return;
+    const orgId = member.organizationId;
+    const today = new Date().toISOString().split('T')[0];
+
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: member } = await supabase
-        .from('hg_members')
-        .select('organization_id')
-        .eq('auth_user_id', user.id)
-        .single();
-      if (!member) return;
-
-      const orgId = member.organization_id;
-      const today = new Date().toISOString().split('T')[0];
-
       const [
         { data: entries },
         { count: memberCount },
@@ -74,31 +68,32 @@ export default function DashboardPage() {
         projects: projectCount ?? 0,
         totalHours: Math.round((totalSecs / 3600) * 10) / 10,
       });
+      setLoading(false);
     })();
-  }, []);
+  }, [member]);
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Today&apos;s Overview</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
-          <p className="text-sm text-slate-400">Total Hours Today</p>
-          <p className="text-2xl font-bold mt-1">{stats.totalHours}h</p>
-        </div>
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
-          <p className="text-sm text-slate-400">Active Members</p>
-          <p className="text-2xl font-bold mt-1">{stats.members}</p>
-        </div>
-        <div className="rounded-lg border border-slate-800 bg-slate-900 p-5">
-          <p className="text-sm text-slate-400">Active Projects</p>
-          <p className="text-2xl font-bold mt-1">{stats.projects}</p>
-        </div>
+        {[
+          { label: 'Total Hours Today', value: `${stats.totalHours}h` },
+          { label: 'Active Members', value: stats.members },
+          { label: 'Active Projects', value: stats.projects },
+        ].map((card) => (
+          <div key={card.label} className="rounded-lg border border-slate-800 bg-slate-900 p-5">
+            <p className="text-sm text-slate-400">{card.label}</p>
+            <p className={`text-2xl font-bold mt-1 ${loading ? 'animate-pulse text-slate-600' : ''}`}>
+              {loading ? '—' : card.value}
+            </p>
+          </div>
+        ))}
       </div>
 
       <h2 className="text-lg font-semibold mb-4">Activity by Member</h2>
       <div className="grid gap-3">
-        {summary.length === 0 && (
+        {!loading && summary.length === 0 && (
           <p className="text-slate-400">No time tracked today.</p>
         )}
         {summary.map((user, i) => (

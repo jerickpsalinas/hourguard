@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { useAuth } from '@/lib/auth-context';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [projectId, setProjectId] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -13,67 +15,51 @@ export default function InvoicesPage() {
   const [title, setTitle] = useState('');
   const [generating, setGenerating] = useState(false);
   const supabase = createClient();
+  const { member } = useAuth();
 
   useEffect(() => {
-    loadInvoices();
-    loadProjects();
-  }, []);
-
-  async function getMembership() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    const { data: member } = await supabase
-      .from('hg_members')
-      .select('id, organization_id')
-      .eq('auth_user_id', user.id)
-      .single();
-    return member;
-  }
+    if (member) {
+      loadInvoices();
+      loadProjects();
+    }
+  }, [member]);
 
   async function loadInvoices() {
-    const m = await getMembership();
-    if (!m) return;
-
+    if (!member) return;
+    setLoading(true);
     const { data } = await supabase
       .from('hg_invoices')
       .select('*, hg_projects(name)')
-      .eq('organization_id', m.organization_id)
+      .eq('organization_id', member.organizationId)
       .order('created_at', { ascending: false });
-
     setInvoices(data ?? []);
+    setLoading(false);
   }
 
   async function loadProjects() {
-    const m = await getMembership();
-    if (!m) return;
-
+    if (!member) return;
     const { data } = await supabase
       .from('hg_projects')
       .select('*')
-      .eq('organization_id', m.organization_id)
+      .eq('organization_id', member.organizationId)
       .eq('is_active', true);
-
     setProjects(data ?? []);
   }
 
   async function generateInvoice(e: React.FormEvent) {
     e.preventDefault();
+    if (!member) return;
     setGenerating(true);
-
-    const m = await getMembership();
-    if (!m) return;
 
     let query = supabase
       .from('hg_time_entries')
       .select('started_at, stopped_at')
-      .eq('organization_id', m.organization_id)
+      .eq('organization_id', member.organizationId)
       .not('stopped_at', 'is', null)
       .gte('started_at', `${fromDate}T00:00:00`)
       .lte('started_at', `${toDate}T23:59:59`);
 
-    if (projectId) {
-      query = query.eq('project_id', projectId);
-    }
+    if (projectId) query = query.eq('project_id', projectId);
 
     const { data: entries } = await query;
 
@@ -86,9 +72,9 @@ export default function InvoicesPage() {
     const totalAmount = totalHours * rate;
 
     await supabase.from('hg_invoices').insert({
-      organization_id: m.organization_id,
+      organization_id: member.organizationId,
       project_id: projectId || null,
-      created_by: m.id,
+      created_by: member.id,
       title: title || `Invoice ${fromDate} to ${toDate}`,
       from_date: fromDate,
       to_date: toDate,
@@ -162,25 +148,31 @@ export default function InvoicesPage() {
         </button>
       </form>
 
-      <div className="space-y-2">
-        {invoices.map((inv) => (
-          <div key={inv.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
-            <div>
-              <p className="font-medium">{inv.title}</p>
-              <p className="text-xs text-slate-400">
-                {inv.from_date} — {inv.to_date} | {(inv as any).hg_projects?.name ?? 'All projects'}
-              </p>
+      {loading ? (
+        <p className="text-slate-400">Loading...</p>
+      ) : invoices.length === 0 ? (
+        <p className="text-slate-400">No invoices yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {invoices.map((inv) => (
+            <div key={inv.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
+              <div>
+                <p className="font-medium">{inv.title}</p>
+                <p className="text-xs text-slate-400">
+                  {inv.from_date} — {inv.to_date} | {(inv as any).hg_projects?.name ?? 'All projects'}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-semibold">${inv.total_amount.toFixed(2)}</p>
+                <p className="text-xs text-slate-400">{inv.total_hours}h @ ${inv.hourly_rate}/h</p>
+                <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs ${inv.status === 'finalized' ? 'bg-green-900 text-green-400' : 'bg-yellow-900 text-yellow-400'}`}>
+                  {inv.status}
+                </span>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="font-semibold">${inv.total_amount.toFixed(2)}</p>
-              <p className="text-xs text-slate-400">{inv.total_hours}h @ ${inv.hourly_rate}/h</p>
-              <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs ${inv.status === 'finalized' ? 'bg-green-900 text-green-400' : 'bg-yellow-900 text-yellow-400'}`}>
-                {inv.status}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -2,45 +2,35 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { useAuth } from '@/lib/auth-context';
 
 export default function SettingsPage() {
   const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState('');
   const [generatedKey, setGeneratedKey] = useState('');
   const supabase = createClient();
+  const { member } = useAuth();
 
-  useEffect(() => { loadApiKeys(); }, []);
-
-  async function getMembership() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    const { data: member } = await supabase
-      .from('hg_members')
-      .select('id, organization_id')
-      .eq('auth_user_id', user.id)
-      .single();
-    return member;
-  }
+  useEffect(() => {
+    if (member) loadApiKeys();
+  }, [member]);
 
   async function loadApiKeys() {
-    const m = await getMembership();
-    if (!m) return;
-
+    if (!member) return;
+    setLoading(true);
     const { data } = await supabase
       .from('hg_api_keys')
       .select('*')
-      .eq('organization_id', m.organization_id)
+      .eq('organization_id', member.organizationId)
       .order('created_at', { ascending: false });
-
     setApiKeys(data ?? []);
+    setLoading(false);
   }
 
   async function createApiKey(e: React.FormEvent) {
     e.preventDefault();
-    if (!newKeyName.trim()) return;
-
-    const m = await getMembership();
-    if (!m) return;
+    if (!newKeyName.trim() || !member) return;
 
     const rawKey = `hg_${crypto.randomUUID().replace(/-/g, '')}`;
     const prefix = rawKey.substring(0, 8);
@@ -52,11 +42,11 @@ export default function SettingsPage() {
     const keyHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
     await supabase.from('hg_api_keys').insert({
-      organization_id: m.organization_id,
+      organization_id: member.organizationId,
       name: newKeyName.trim(),
       key_hash: keyHash,
       key_prefix: prefix,
-      created_by: m.id,
+      created_by: member.id,
     });
 
     setGeneratedKey(rawKey);
@@ -100,31 +90,37 @@ export default function SettingsPage() {
           </div>
         )}
 
-        <div className="space-y-2">
-          {apiKeys.map((key) => (
-            <div key={key.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
-              <div>
-                <p className="font-medium">{key.name}</p>
-                <p className="text-xs text-slate-400">
-                  {key.key_prefix}... | Created {new Date(key.created_at).toLocaleDateString()}
-                  {key.last_used_at && ` | Last used ${new Date(key.last_used_at).toLocaleDateString()}`}
-                </p>
+        {loading ? (
+          <p className="text-slate-400">Loading...</p>
+        ) : apiKeys.length === 0 ? (
+          <p className="text-slate-400">No API keys yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {apiKeys.map((key) => (
+              <div key={key.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
+                <div>
+                  <p className="font-medium">{key.name}</p>
+                  <p className="text-xs text-slate-400">
+                    {key.key_prefix}... | Created {new Date(key.created_at).toLocaleDateString()}
+                    {key.last_used_at && ` | Last used ${new Date(key.last_used_at).toLocaleDateString()}`}
+                  </p>
+                </div>
+                <div>
+                  {key.is_active ? (
+                    <button
+                      onClick={() => revokeKey(key.id)}
+                      className="text-sm text-red-400 hover:text-red-300"
+                    >
+                      Revoke
+                    </button>
+                  ) : (
+                    <span className="text-xs text-slate-500">Revoked</span>
+                  )}
+                </div>
               </div>
-              <div>
-                {key.is_active ? (
-                  <button
-                    onClick={() => revokeKey(key.id)}
-                    className="text-sm text-red-400 hover:text-red-300"
-                  >
-                    Revoke
-                  </button>
-                ) : (
-                  <span className="text-xs text-slate-500">Revoked</span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -2,50 +2,38 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
+import { useAuth } from '@/lib/auth-context';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
   const supabase = createClient();
+  const { member } = useAuth();
 
-  useEffect(() => { loadProjects(); }, []);
-
-  async function getOrgId() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-    const { data: member } = await supabase
-      .from('hg_members')
-      .select('organization_id')
-      .eq('auth_user_id', user.id)
-      .single();
-    return member?.organization_id ?? null;
-  }
+  useEffect(() => {
+    if (member) loadProjects();
+  }, [member]);
 
   async function loadProjects() {
-    const orgId = await getOrgId();
-    if (!orgId) return;
-
+    if (!member) return;
+    setLoading(true);
     const { data } = await supabase
       .from('hg_projects')
       .select('*')
-      .eq('organization_id', orgId)
+      .eq('organization_id', member.organizationId)
       .order('created_at', { ascending: false });
-
     setProjects(data ?? []);
+    setLoading(false);
   }
 
   async function addProject(e: React.FormEvent) {
     e.preventDefault();
-    if (!newName.trim()) return;
-
-    const orgId = await getOrgId();
-    if (!orgId) return;
-
+    if (!newName.trim() || !member) return;
     await supabase.from('hg_projects').insert({
-      organization_id: orgId,
+      organization_id: member.organizationId,
       name: newName.trim(),
     });
-
     setNewName('');
     loadProjects();
   }
@@ -70,22 +58,28 @@ export default function ProjectsPage() {
           Add Project
         </button>
       </form>
-      <div className="space-y-2">
-        {projects.map((p) => (
-          <div key={p.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
-            <div>
-              <p className="font-medium">{p.name}</p>
-              <p className="text-xs text-slate-400">{p.is_active ? 'Active' : 'Archived'}</p>
+      {loading ? (
+        <p className="text-slate-400">Loading...</p>
+      ) : projects.length === 0 ? (
+        <p className="text-slate-400">No projects yet. Create one above.</p>
+      ) : (
+        <div className="space-y-2">
+          {projects.map((p) => (
+            <div key={p.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
+              <div>
+                <p className="font-medium">{p.name}</p>
+                <p className="text-xs text-slate-400">{p.is_active ? 'Active' : 'Archived'}</p>
+              </div>
+              <button
+                onClick={() => toggleProject(p.id, p.is_active)}
+                className="text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                {p.is_active ? 'Archive' : 'Restore'}
+              </button>
             </div>
-            <button
-              onClick={() => toggleProject(p.id, p.is_active)}
-              className="text-sm text-slate-400 hover:text-white transition-colors"
-            >
-              {p.is_active ? 'Archive' : 'Restore'}
-            </button>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
