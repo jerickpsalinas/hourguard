@@ -6,7 +6,14 @@
   <title>Hourguard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #050505;
+      color: #fafafa;
+      background-image: radial-gradient(circle at 50% 0%, rgba(239, 68, 68, 0.08), transparent 55%);
+    }
+    input:focus, select:focus { outline: none; border-color: rgba(239,68,68,0.5) !important; }
+    ::placeholder { color: rgba(255,255,255,0.35); }
   </style>
 </head>
 <body>

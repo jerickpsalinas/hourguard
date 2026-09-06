@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 
 const styles = {
   container: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', height: '100vh', padding: 32 },
-  title: { fontSize: 24, fontWeight: 700, marginBottom: 32 },
-  input: { width: '100%', maxWidth: 300, padding: '10px 14px', marginBottom: 12, borderRadius: 8, border: '1px solid #334155', background: '#1e293b', color: '#e2e8f0', fontSize: 14 },
-  button: { width: '100%', maxWidth: 300, padding: '10px 14px', borderRadius: 8, border: 'none', background: '#3b82f6', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginTop: 8 },
-  error: { color: '#ef4444', fontSize: 13, marginTop: 8 },
+  logo: { width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg, #ef4444, #e03060)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, boxShadow: '0 8px 24px rgba(239,68,68,0.35)' },
+  title: { fontSize: 22, fontWeight: 700, marginBottom: 4, letterSpacing: '-0.02em' },
+  subtitle: { fontSize: 12, color: 'rgba(255,255,255,0.4)', marginBottom: 28, fontFamily: 'ui-monospace, monospace', letterSpacing: '0.08em', textTransform: 'uppercase' as const },
+  input: { width: '100%', maxWidth: 300, padding: '11px 14px', marginBottom: 12, borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.06)', color: '#fafafa', fontSize: 14 },
+  button: { width: '100%', maxWidth: 300, padding: '11px 14px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #ef4444, #e03060)', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', marginTop: 8, boxShadow: '0 8px 24px rgba(239,68,68,0.3)' },
+  error: { color: '#f87171', fontSize: 13, marginTop: 10 },
 };
 
 export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
@@ -31,7 +33,13 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
 
   return (
     <form onSubmit={handleSubmit} style={styles.container}>
+      <div style={styles.logo}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
       <h1 style={styles.title}>Hourguard</h1>
+      <p style={styles.subtitle}>// by HireJPS</p>
       <input
         style={styles.input}
         type="email"

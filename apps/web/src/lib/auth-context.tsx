@@ -17,6 +17,7 @@ interface AuthContextValue {
   orgName: string;
   loading: boolean;
   error: string | null;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue>({
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextValue>({
   orgName: '',
   loading: true,
   error: null,
+  refresh: async () => {},
 });
 
 export function useAuth() {
@@ -109,7 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ member, orgName, loading, error }}>
+    <AuthContext.Provider value={{ member, orgName, loading, error, refresh: loadUser }}>
       {children}
     </AuthContext.Provider>
   );

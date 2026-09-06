@@ -1,4 +1,4 @@
-import { uIOhook, UiohookKeyboardEvent, UiohookMouseEvent } from 'uiohook-napi';
+import { uIOhook, UiohookKeyboardEvent, UiohookMouseEvent, UiohookWheelEvent } from 'uiohook-napi';
 
 const EXPECTED_EVENTS_PER_INTERVAL = 1000;
 
@@ -15,12 +15,16 @@ export class ActivityMonitor {
     this.mouseCount++;
   };
 
+  private onWheel = (_e: UiohookWheelEvent) => {
+    this.mouseCount++;
+  };
+
   start() {
     if (this.listening) return;
     this.reset();
     uIOhook.on('keydown', this.onKey);
     uIOhook.on('click', this.onMouse);
-    uIOhook.on('wheel', this.onMouse);
+    uIOhook.on('wheel', this.onWheel);
     uIOhook.start();
     this.listening = true;
   }

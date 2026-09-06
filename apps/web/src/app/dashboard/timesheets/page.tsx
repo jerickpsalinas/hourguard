@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonTable } from '@/components/skeleton';
+import { toCsv, downloadCsv } from '@/lib/csv';
 
 export default function TimesheetsPage() {
   const [entries, setEntries] = useState<any[]>([]);
@@ -44,6 +45,22 @@ export default function TimesheetsPage() {
     return `${h}h ${m}m`;
   }
 
+  function exportCsv() {
+    const rows = entries.map((entry) => [
+      (entry as any).hg_members?.full_name ?? '',
+      (entry as any).hg_projects?.name ?? '',
+      new Date(entry.started_at).toLocaleString(),
+      entry.stopped_at ? new Date(entry.stopped_at).toLocaleString() : '',
+      formatDuration(entry.started_at, entry.stopped_at),
+      `${entry.activity_percent}%`,
+    ]);
+    const csv = toCsv(
+      ['Employee', 'Project', 'Started', 'Stopped', 'Duration', 'Activity'],
+      rows
+    );
+    downloadCsv(`timesheets_${fromDate}_to_${toDate}.csv`, csv);
+  }
+
   const inputClass = 'rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';
 
   return (
@@ -54,6 +71,16 @@ export default function TimesheetsPage() {
         <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} max={toDate} className={inputClass} aria-label="From date" />
         <span className="text-white/30 text-sm">to</span>
         <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} min={fromDate} className={inputClass} aria-label="To date" />
+        <button
+          onClick={exportCsv}
+          disabled={loading || entries.length === 0}
+          className="ml-auto inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.1] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export CSV
+        </button>
       </div>
       <div className="overflow-x-auto glass-card">
         <table className="w-full text-sm">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonRows } from '@/components/skeleton';
@@ -147,7 +148,7 @@ export default function InvoicesPage() {
       ) : (
         <div className="space-y-2">
           {invoices.map((inv) => (
-            <div key={inv.id} className="flex items-center justify-between glass-card p-4">
+            <Link key={inv.id} href={`/dashboard/invoices/${inv.id}`} className="flex items-center justify-between glass-card p-4 hover:border-white/20 transition-colors">
               <div>
                 <p className="font-medium">{inv.title}</p>
                 <p className="text-xs text-white/40">
@@ -161,7 +162,7 @@ export default function InvoicesPage() {
                   {inv.status}
                 </span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
