@@ -8,6 +8,7 @@ import { SkeletonRows } from '@/components/skeleton';
 
 export default function MembersPage() {
   const [members, setMembers] = useState<any[]>([]);
+  const [invites, setInvites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'employee' | 'manager'>('employee');
@@ -17,7 +18,10 @@ export default function MembersPage() {
   const { member } = useAuth();
 
   useEffect(() => {
-    if (member) loadMembers();
+    if (member) {
+      loadMembers();
+      loadInvites();
+    }
   }, [member]);
 
   async function loadMembers() {
@@ -30,6 +34,24 @@ export default function MembersPage() {
       .order('created_at', { ascending: true });
     setMembers(data ?? []);
     setLoading(false);
+  }
+
+  async function loadInvites() {
+    if (!member) return;
+    const { data } = await supabase
+      .from('hg_invites')
+      .select('*')
+      .eq('organization_id', member.organizationId)
+      .eq('accepted', false)
+      .order('created_at', { ascending: false });
+    setInvites(data ?? []);
+  }
+
+  async function revokeInvite(id: string) {
+    if (!member) return;
+    if (!confirm('Revoke this invite? The link will stop working.')) return;
+    await supabase.from('hg_invites').delete().eq('id', id).eq('organization_id', member.organizationId);
+    loadInvites();
   }
 
   async function createInvite(e: React.FormEvent) {
@@ -53,6 +75,7 @@ export default function MembersPage() {
 
     setInviteLink(`${window.location.origin}/invite/${token}`);
     setInviteEmail('');
+    loadInvites();
   }
 
   async function toggleMember(id: string, isActive: boolean) {
@@ -99,6 +122,44 @@ export default function MembersPage() {
         </div>
       )}
 
+      {invites.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-sm font-display font-semibold mb-3 text-white/70">Pending Invites</h2>
+          <div className="space-y-2">
+            {invites.map((inv) => {
+              const expired = new Date(inv.expires_at) < new Date();
+              const link = `${window.location.origin}/invite/${inv.token}`;
+              return (
+                <div key={inv.id} className="flex flex-wrap items-center justify-between gap-3 glass-card p-4">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{inv.email || 'Anyone with the link'}</p>
+                    <p className="text-xs text-white/40">
+                      <span className="capitalize">{inv.role}</span>
+                      {' · '}
+                      {expired ? (
+                        <span className="text-red-400">Expired</span>
+                      ) : (
+                        <>Expires {new Date(inv.expires_at).toLocaleDateString()}</>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {!expired && <CopyButton text={link} />}
+                    <button
+                      onClick={() => revokeInvite(inv.id)}
+                      className="text-xs px-3 py-1 rounded-full border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-colors"
+                    >
+                      Revoke
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <h2 className="text-sm font-display font-semibold mb-3 text-white/70">Team</h2>
       {loading ? (
         <SkeletonRows count={3} />
       ) : members.length === 0 ? (
