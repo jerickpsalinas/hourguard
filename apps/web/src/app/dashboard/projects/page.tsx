@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonRows } from '@/components/skeleton';
 import { EmptyState } from '@/components/empty-state';
+import { useToast } from '@/components/toast';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -12,6 +13,7 @@ export default function ProjectsPage() {
   const [newName, setNewName] = useState('');
   const supabase = createClient();
   const { member } = useAuth();
+  const { toast } = useToast();
   const isAdmin = member?.role === 'owner' || member?.role === 'manager';
 
   useEffect(() => {
@@ -33,17 +35,21 @@ export default function ProjectsPage() {
   async function addProject(e: React.FormEvent) {
     e.preventDefault();
     if (!newName.trim() || !member) return;
-    await supabase.from('hg_projects').insert({
+    const { error } = await supabase.from('hg_projects').insert({
       organization_id: member.organizationId,
       name: newName.trim(),
     });
+    if (error) return toast('Failed to add project.', 'error');
+    toast('Project added.');
     setNewName('');
     loadProjects();
   }
 
   async function toggleProject(id: string, isActive: boolean) {
     if (!member) return;
-    await supabase.from('hg_projects').update({ is_active: !isActive }).eq('id', id).eq('organization_id', member.organizationId);
+    const { error } = await supabase.from('hg_projects').update({ is_active: !isActive }).eq('id', id).eq('organization_id', member.organizationId);
+    if (error) return toast('Failed to update project.', 'error');
+    toast(isActive ? 'Project archived.' : 'Project restored.');
     loadProjects();
   }
 

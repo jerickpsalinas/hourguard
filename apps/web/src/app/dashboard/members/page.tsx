@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { CopyButton } from '@/components/copy-button';
 import { SkeletonRows } from '@/components/skeleton';
 import { EmptyState } from '@/components/empty-state';
+import { useToast } from '@/components/toast';
 
 export default function MembersPage() {
   const [members, setMembers] = useState<any[]>([]);
@@ -17,6 +18,7 @@ export default function MembersPage() {
   const [inviteError, setInviteError] = useState('');
   const supabase = createClient();
   const { member } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (member) {
@@ -51,7 +53,9 @@ export default function MembersPage() {
   async function revokeInvite(id: string) {
     if (!member) return;
     if (!confirm('Revoke this invite? The link will stop working.')) return;
-    await supabase.from('hg_invites').delete().eq('id', id).eq('organization_id', member.organizationId);
+    const { error } = await supabase.from('hg_invites').delete().eq('id', id).eq('organization_id', member.organizationId);
+    if (error) return toast('Failed to revoke invite.', 'error');
+    toast('Invite revoked.');
     loadInvites();
   }
 
@@ -81,13 +85,17 @@ export default function MembersPage() {
 
   async function toggleMember(id: string, isActive: boolean) {
     if (!member || id === member.id) return;
-    await supabase.from('hg_members').update({ is_active: !isActive }).eq('id', id).eq('organization_id', member.organizationId);
+    const { error } = await supabase.from('hg_members').update({ is_active: !isActive }).eq('id', id).eq('organization_id', member.organizationId);
+    if (error) return toast('Failed to update member.', 'error');
+    toast(isActive ? 'Member deactivated.' : 'Member activated.');
     loadMembers();
   }
 
   async function changeRole(id: string, newRole: string) {
     if (!member || id === member.id) return;
-    await supabase.from('hg_members').update({ role: newRole }).eq('id', id).eq('organization_id', member.organizationId);
+    const { error } = await supabase.from('hg_members').update({ role: newRole }).eq('id', id).eq('organization_id', member.organizationId);
+    if (error) return toast('Failed to change role.', 'error');
+    toast(`Role updated to ${newRole}.`);
     loadMembers();
   }
 

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
+import { ToastProvider } from '@/components/toast';
 
 type NavItem = {
   href: string;
@@ -184,7 +185,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <DashboardShell>{children}</DashboardShell>
+      <ToastProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </ToastProvider>
     </AuthProvider>
   );
 }

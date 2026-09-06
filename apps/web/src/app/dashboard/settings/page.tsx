@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { CopyButton } from '@/components/copy-button';
 import { SkeletonRows } from '@/components/skeleton';
+import { useToast } from '@/components/toast';
 
 export default function SettingsPage() {
   const [apiKeys, setApiKeys] = useState<any[]>([]);
@@ -13,6 +14,7 @@ export default function SettingsPage() {
   const [generatedKey, setGeneratedKey] = useState('');
   const supabase = createClient();
   const { member } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (member) loadApiKeys();
@@ -43,7 +45,7 @@ export default function SettingsPage() {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const keyHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
-    await supabase.from('hg_api_keys').insert({
+    const { error } = await supabase.from('hg_api_keys').insert({
       organization_id: member.organizationId,
       name: newKeyName.trim(),
       key_hash: keyHash,
@@ -51,15 +53,23 @@ export default function SettingsPage() {
       created_by: member.id,
     });
 
+    if (error) {
+      toast('Failed to create API key.', 'error');
+      return;
+    }
+
     setGeneratedKey(rawKey);
     setNewKeyName('');
+    toast('API key created.');
     loadApiKeys();
   }
 
   async function revokeKey(id: string, name: string) {
     if (!member) return;
     if (!confirm(`Revoke API key "${name}"? This cannot be undone.`)) return;
-    await supabase.from('hg_api_keys').update({ is_active: false }).eq('id', id).eq('organization_id', member.organizationId);
+    const { error } = await supabase.from('hg_api_keys').update({ is_active: false }).eq('id', id).eq('organization_id', member.organizationId);
+    if (error) return toast('Failed to revoke key.', 'error');
+    toast('API key revoked.');
     loadApiKeys();
   }
 
