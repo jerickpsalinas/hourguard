@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { localDateKey, localDayBounds } from '@/lib/dates';
+import { toCsv, downloadCsv } from '@/lib/csv';
 import { EmptyState } from '@/components/empty-state';
 
 const PAGE_SIZE = 24;
@@ -61,6 +62,15 @@ export default function ScreenshotsPage() {
     loadPage(0, false);
   }, [member, selectedDate, loadPage]);
 
+  function exportCsv() {
+    const rows = screenshots.map((ss) => [
+      (ss as any).hg_members?.full_name ?? 'Unknown',
+      new Date(ss.captured_at).toLocaleString(),
+      `${ss.activity_percent}%`,
+    ]);
+    downloadCsv(`screenshots_${selectedDate}.csv`, toCsv(['Employee', 'Captured', 'Activity'], rows));
+  }
+
   const closeModal = useCallback(() => setExpandedUrl(null), []);
   const closeBtnRef = useRef<HTMLButtonElement>(null);
   const prevFocusRef = useRef<HTMLElement | null>(null);
@@ -86,13 +96,25 @@ export default function ScreenshotsPage() {
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Screenshots</h1>
       <p className="text-sm text-white/60 font-mono text-xs tracking-wider uppercase mb-6">// activity captures</p>
-      <input
-        type="date"
-        value={selectedDate}
-        onChange={(e) => setSelectedDate(e.target.value)}
-        className="mb-6 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors"
-        aria-label="Select date"
-      />
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <input
+          type="date"
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors"
+          aria-label="Select date"
+        />
+        <button
+          onClick={exportCsv}
+          disabled={loading || screenshots.length === 0}
+          className="ml-auto inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm text-white/70 hover:text-white hover:bg-white/[0.1] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export CSV
+        </button>
+      </div>
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
