@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonRows } from '@/components/skeleton';
 import { localRangeBounds } from '@/lib/dates';
+import { formatCurrency } from '@/lib/format';
+import { EmptyState } from '@/components/empty-state';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -136,7 +138,7 @@ export default function InvoicesPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="glass-card p-4">
             <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Total Invoiced</p>
-            <p className="text-xl font-display font-bold">${invoices.reduce((s, i) => s + (i.total_amount ?? 0), 0).toFixed(2)}</p>
+            <p className="text-xl font-display font-bold">{formatCurrency(invoices.reduce((s, i) => s + (i.total_amount ?? 0), 0), invoices[0]?.currency)}</p>
           </div>
           <div className="glass-card p-4">
             <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Drafts</p>
@@ -152,7 +154,11 @@ export default function InvoicesPage() {
       {loading ? (
         <SkeletonRows count={3} />
       ) : invoices.length === 0 ? (
-        <p className="text-white/40">No invoices yet.</p>
+        <EmptyState
+          icon="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
+          title="No invoices yet"
+          description="Generate your first invoice from tracked hours using the form above."
+        />
       ) : (
         <div className="space-y-2">
           {invoices.map((inv) => (
@@ -164,8 +170,8 @@ export default function InvoicesPage() {
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-display font-semibold">${inv.total_amount.toFixed(2)}</p>
-                <p className="text-xs text-white/40">{inv.total_hours}h @ ${inv.hourly_rate}/h</p>
+                <p className="font-display font-semibold">{formatCurrency(inv.total_amount, inv.currency)}</p>
+                <p className="text-xs text-white/40">{inv.total_hours}h @ {formatCurrency(inv.hourly_rate, inv.currency)}/h</p>
                 <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs ${inv.status === 'finalized' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
                   {inv.status}
                 </span>

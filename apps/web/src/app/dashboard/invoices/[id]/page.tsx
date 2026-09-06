@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
+import { formatCurrency } from '@/lib/format';
 
 export default function InvoiceDetailPage() {
   const params = useParams();
@@ -139,8 +140,8 @@ export default function InvoiceDetailPage() {
             <tr className="border-b border-white/[0.06] print:border-gray-200">
               <td className="py-3">Tracked time{invoice.hg_projects?.name ? ` — ${invoice.hg_projects.name}` : ''}</td>
               <td className="py-3 text-right">{invoice.total_hours}</td>
-              <td className="py-3 text-right">{invoice.currency} {Number(invoice.hourly_rate).toFixed(2)}</td>
-              <td className="py-3 text-right">{invoice.currency} {Number(invoice.total_amount).toFixed(2)}</td>
+              <td className="py-3 text-right">{formatCurrency(invoice.hourly_rate, invoice.currency)}</td>
+              <td className="py-3 text-right">{formatCurrency(invoice.total_amount, invoice.currency)}</td>
             </tr>
           </tbody>
         </table>
@@ -149,13 +150,13 @@ export default function InvoiceDetailPage() {
           <div className="w-56">
             <div className="flex justify-between py-2 border-t border-white/[0.1] print:border-gray-300">
               <span className="font-display font-semibold">Total</span>
-              <span className="font-display font-bold text-brand print:text-black">{invoice.currency} {Number(invoice.total_amount).toFixed(2)}</span>
+              <span className="font-display font-bold text-brand print:text-black">{formatCurrency(invoice.total_amount, invoice.currency)}</span>
             </div>
           </div>
         </div>
 
         <p className="mt-8 text-xs text-white/30 print:text-gray-400">
-          Generated {new Date(invoice.created_at).toLocaleDateString()} · {invoice.total_hours}h @ {invoice.currency} {Number(invoice.hourly_rate).toFixed(2)}/h
+          Generated {new Date(invoice.created_at).toLocaleDateString()} · {invoice.total_hours}h @ {formatCurrency(invoice.hourly_rate, invoice.currency)}/h
         </p>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonRows } from '@/components/skeleton';
+import { EmptyState } from '@/components/empty-state';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -61,7 +62,11 @@ export default function ProjectsPage() {
       {loading ? (
         <SkeletonRows count={3} />
       ) : projects.length === 0 ? (
-        <p className="text-white/40">No projects yet. Create one above.</p>
+        <EmptyState
+          icon="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+          title="No projects yet"
+          description={isAdmin ? 'Create your first project above to start organizing tracked time.' : 'No projects have been created for your organization yet.'}
+        />
       ) : (
         <div className="space-y-2">
           {projects.map((p) => (
