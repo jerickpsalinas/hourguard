@@ -22,6 +22,20 @@ Snapshot of what's done and what still needs a live environment. Keep this curre
 - Idle auto-pause + auto-resume, state synced to UI and tray
 - Env baked in via `MAIN_VITE_*`; builds to `dist/`; brand app icon
 
+## Tests & CI
+- Vitest suite (36 tests) over pure helpers: `csv` (incl. formula-injection guard),
+  `format` (currency/hours/duration), `dates` (timezone-robust), `aggregate`,
+  `invoice` totals, `api-key` hashing, and API `paginate`.
+- GitHub Actions runs typecheck (web + desktop), tests, and both builds on push/PR.
+
+## Recently hardened (code-only)
+- Desktop offline queue is now actually flushed (was dead code) — after login, on
+  session restore, and every 2 min.
+- CSV export guarded against spreadsheet formula injection.
+- API pagination guards non-numeric input (was producing NaN ranges).
+- Shared helpers remove client/server drift risk for invoice totals and API-key
+  hashing.
+
 ## Needs a live environment (do on computer)
 
 1. **RLS bootstrap for signup & invite acceptance** — a brand-new user has no
