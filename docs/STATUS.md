@@ -71,7 +71,19 @@ Snapshot of what's done and what still needs a live environment. Keep this curre
 4. **Desktop distribution** — code signing (Apple/Windows certs), build
    installers, host them, and wire the `/download` page links.
 
-5. **Account provisioning** — Paddle webhook → auto-create org/access after purchase.
+5. **Account provisioning** — ✅ **fixed in code (scaffold; confirm live).**
+   `POST /api/webhooks/paddle` verifies the `Paddle-Signature` HMAC against
+   `PADDLE_WEBHOOK_SECRET`, then on `transaction.completed` /
+   `subscription.activated` / `subscription.created` provisions idempotently:
+   an email that already has a membership just gets Hourguard access ensured on
+   its org; a new buyer gets an org (`access_type: ['hourguard']`), an auth user
+   (email pre-confirmed) with a Supabase recovery/set-password link, plus
+   `portal_users` and an owner `hg_members` row, rolling back on failure.
+   **Confirm live:** the buyer email + org name are read from the checkout's
+   `custom_data` ({ email, org_name }) in `extractBuyer()` — the one
+   account-specific mapping point; switch it to a Paddle customer-API lookup if
+   you don't pass custom_data. Wire the returned set-password link to email
+   delivery (Supabase SMTP), and set `PADDLE_WEBHOOK_SECRET` in the deploy env.
 
 ## Deeper refactors flagged by review (need schema/live testing)
 These are structural improvements, not bugs — the current code works but models
