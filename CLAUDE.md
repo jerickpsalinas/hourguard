@@ -36,6 +36,18 @@ pnpm dev:web       # Next.js dev server on :3000
 pnpm dev:desktop   # Electron app in dev mode
 ```
 
+## Testing & CI
+
+```bash
+pnpm --filter @hourguard/web test        # Vitest unit tests (pure helpers)
+pnpm --filter @hourguard/web test:watch  # Watch mode
+```
+
+GitHub Actions (`.github/workflows/ci.yml`) runs typecheck (web + desktop), web
+unit tests, and production builds of both apps on every push to `main` and PR.
+Tested pure modules live in `apps/web/src/lib` (`dates`, `csv`, `format`,
+`aggregate`) with tests in `apps/web/src/lib/__tests__`.
+
 ## Build
 
 ```bash
@@ -51,4 +63,5 @@ Run `supabase/migrations/002_hirejps_portal_adapted.sql` in the **hirejps-portal
 ## API
 
 REST API at `/api/v1/*` secured with Bearer token (API keys generated in dashboard Settings).
-Endpoints: time-entries, screenshots, projects, members, invoices.
+Endpoints: time-entries (GET/POST), screenshots (GET/POST), invoices (GET/POST), projects (GET), members (GET).
+POST routes validate that referenced records (member/project/time-entry) and storage paths belong to the caller's org. Full reference: `docs/API.md`.
