@@ -2,7 +2,13 @@
 
 function escapeCell(value: unknown): string {
   if (value === null || value === undefined) return '';
-  const str = String(value);
+  let str = String(value);
+  // Guard against CSV formula injection: a cell beginning with = + - @ (or a
+  // leading tab/CR) is executed as a formula by Excel/Sheets. Prefixing with a
+  // single quote neutralizes it while displaying the original text.
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
   if (/[",\n\r]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }

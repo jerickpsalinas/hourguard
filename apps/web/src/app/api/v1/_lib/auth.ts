@@ -49,10 +49,20 @@ export async function authenticateApiKey(
   };
 }
 
-export function paginate(request: NextRequest) {
-  const url = new URL(request.url);
-  const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
-  const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get('limit') ?? '50')));
+// Pure pagination math — exported for testing. Guards against non-numeric input
+// (e.g. ?page=abc) which would otherwise produce NaN and break the query range.
+export function paginateParams(pageRaw: string | null, limitRaw: string | null) {
+  const toInt = (v: string | null, fallback: number) => {
+    const n = parseInt(v ?? '', 10);
+    return Number.isFinite(n) ? n : fallback;
+  };
+  const page = Math.max(1, toInt(pageRaw, 1));
+  const limit = Math.min(100, Math.max(1, toInt(limitRaw, 50)));
   const offset = (page - 1) * limit;
   return { page, limit, offset };
+}
+
+export function paginate(request: NextRequest) {
+  const url = new URL(request.url);
+  return paginateParams(url.searchParams.get('page'), url.searchParams.get('limit'));
 }
