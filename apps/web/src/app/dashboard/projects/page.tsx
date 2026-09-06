@@ -12,9 +12,8 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
   const supabase = createClient();
-  const { member } = useAuth();
+  const { member, isAdmin } = useAuth();
   const { toast } = useToast();
-  const isAdmin = member?.role === 'owner' || member?.role === 'manager';
 
   useEffect(() => {
     if (member) loadProjects();

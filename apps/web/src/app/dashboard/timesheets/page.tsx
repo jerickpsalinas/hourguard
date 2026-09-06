@@ -22,8 +22,7 @@ export default function TimesheetsPage() {
   });
   const [toDate, setToDate] = useState(() => localDateKey(new Date()));
   const supabase = createClient();
-  const { member } = useAuth();
-  const isAdmin = member?.role === 'owner' || member?.role === 'manager';
+  const { member, isAdmin } = useAuth();
 
   // Load filter options once (members only matter for managers; RLS limits
   // employees to their own entries regardless).

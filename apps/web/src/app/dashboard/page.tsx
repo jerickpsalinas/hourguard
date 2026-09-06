@@ -13,8 +13,7 @@ type ProjectTotal = { name: string; hours: number };
 
 export default function DashboardPage() {
   const supabase = createClient();
-  const { member } = useAuth();
-  const isAdmin = member?.role === 'owner' || member?.role === 'manager';
+  const { member, isAdmin } = useAuth();
   const [summary, setSummary] = useState<any[]>([]);
   const [stats, setStats] = useState({ members: 0, projects: 0, totalHours: 0 });
   const [weekBars, setWeekBars] = useState<DayBar[]>([]);

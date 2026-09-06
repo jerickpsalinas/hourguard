@@ -12,13 +12,11 @@ export default function InvoiceDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const supabase = createClient();
-  const { member, orgName } = useAuth();
+  const { member, orgName, isAdmin } = useAuth();
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
-
-  const isAdmin = member?.role === 'owner' || member?.role === 'manager';
 
   useEffect(() => {
     if (!member) return;

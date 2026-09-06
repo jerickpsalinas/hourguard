@@ -29,7 +29,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-  const { member, orgName, memberships, loading, error, switchOrg } = useAuth();
+  const { member, orgName, memberships, isAdmin, loading, error, switchOrg } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   if (loading) {
@@ -125,7 +125,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="space-y-1 flex-1">
-          {navItems.filter((item) => !item.adminOnly || member?.role === 'owner' || member?.role === 'manager').map((item) => (
+          {navItems.filter((item) => !item.adminOnly || isAdmin).map((item) => (
             <Link
               key={item.href}
               href={item.href}

@@ -20,6 +20,7 @@ interface AuthContextValue {
   member: MemberInfo | null;
   orgName: string;
   memberships: Membership[];
+  isAdmin: boolean;
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
@@ -32,6 +33,7 @@ const AuthContext = createContext<AuthContextValue>({
   member: null,
   orgName: '',
   memberships: [],
+  isAdmin: false,
   loading: true,
   error: null,
   refresh: async () => {},
@@ -68,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const member = memberships.find((m) => m.organizationId === activeOrgId) ?? null;
   const orgName = member?.orgName ?? '';
+  const isAdmin = member?.role === 'owner' || member?.role === 'manager';
 
   async function loadUser() {
     try {
@@ -167,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ member, orgName, memberships, loading, error, refresh: loadUser, switchOrg }}>
+    <AuthContext.Provider value={{ member, orgName, memberships, isAdmin, loading, error, refresh: loadUser, switchOrg }}>
       {children}
     </AuthContext.Provider>
   );
