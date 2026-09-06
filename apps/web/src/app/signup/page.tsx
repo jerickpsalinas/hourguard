@@ -42,6 +42,20 @@ export default function SignupPage() {
       return;
     }
 
+    const { error: portalError } = await supabase.from('portal_users').insert({
+      auth_user_id: authData.user.id,
+      organization_id: org.id,
+      full_name: fullName,
+      email,
+      role: 'owner',
+    });
+
+    if (portalError) {
+      setError('Failed to create portal profile');
+      setLoading(false);
+      return;
+    }
+
     const { error: memberError } = await supabase.from('hg_members').insert({
       auth_user_id: authData.user.id,
       organization_id: org.id,

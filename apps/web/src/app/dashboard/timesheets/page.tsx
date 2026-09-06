@@ -49,9 +49,10 @@ export default function TimesheetsPage() {
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Timesheets</h1>
       <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// time entries</p>
-      <div className="flex gap-4 mb-6">
-        <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={inputClass} />
-        <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={inputClass} />
+      <div className="flex flex-wrap items-center gap-4 mb-6">
+        <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} max={toDate} className={inputClass} aria-label="From date" />
+        <span className="text-white/30 text-sm">to</span>
+        <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} min={fromDate} className={inputClass} aria-label="To date" />
       </div>
       <div className="overflow-x-auto glass-card">
         <table className="w-full text-sm">

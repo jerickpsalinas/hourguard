@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 
@@ -40,6 +40,17 @@ export default function ScreenshotsPage() {
     })();
   }, [member, selectedDate]);
 
+  const closeModal = useCallback(() => setExpandedUrl(null), []);
+
+  useEffect(() => {
+    if (!expandedUrl) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [expandedUrl, closeModal]);
+
   return (
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Screenshots</h1>
@@ -49,6 +60,7 @@ export default function ScreenshotsPage() {
         value={selectedDate}
         onChange={(e) => setSelectedDate(e.target.value)}
         className="mb-6 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors"
+        aria-label="Select date"
       />
       {loading ? (
         <p className="text-white/40">Loading...</p>
@@ -56,32 +68,41 @@ export default function ScreenshotsPage() {
         <p className="text-white/40">No screenshots for this date.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {screenshots.map((ss) => (
-            <div
-              key={ss.id}
-              className="cursor-pointer glass-card overflow-hidden hover:border-white/20 transition-colors"
-              onClick={() => setExpandedUrl(ss.url)}
-            >
-              {ss.url && (
-                <img src={ss.url} alt="Screenshot" className="w-full aspect-video object-cover" />
-              )}
-              <div className="p-2">
-                <p className="text-xs font-medium">{(ss as any).hg_members?.full_name}</p>
-                <p className="text-xs text-white/40">
-                  {new Date(ss.captured_at).toLocaleTimeString()} — {ss.activity_percent}%
-                </p>
+          {screenshots.map((ss) => {
+            const memberName = (ss as any).hg_members?.full_name ?? 'Unknown';
+            const time = new Date(ss.captured_at).toLocaleTimeString();
+            return (
+              <div
+                key={ss.id}
+                className="cursor-pointer glass-card overflow-hidden hover:border-white/20 transition-colors"
+                onClick={() => setExpandedUrl(ss.url)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter') setExpandedUrl(ss.url); }}
+              >
+                {ss.url && (
+                  <img src={ss.url} alt={`Screenshot by ${memberName} at ${time}`} className="w-full aspect-video object-cover" />
+                )}
+                <div className="p-2">
+                  <p className="text-xs font-medium">{memberName}</p>
+                  <p className="text-xs text-white/40">
+                    {time} — {ss.activity_percent}%
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
       {expandedUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          onClick={() => setExpandedUrl(null)}
+          onClick={closeModal}
+          role="dialog"
+          aria-label="Expanded screenshot"
         >
-          <img src={expandedUrl} alt="Screenshot" className="max-w-[90vw] max-h-[90vh] rounded-2xl" />
+          <img src={expandedUrl} alt="Expanded screenshot" className="max-w-[90vw] max-h-[90vh] rounded-2xl" />
         </div>
       )}
     </div>

@@ -17,11 +17,7 @@ export default function DashboardPage() {
     const today = new Date().toISOString().split('T')[0];
 
     (async () => {
-      const [
-        { data: entries },
-        { count: memberCount },
-        { count: projectCount },
-      ] = await Promise.all([
+      const [entriesResult, membersResult, projectsResult] = await Promise.all([
         supabase
           .from('hg_time_entries')
           .select('member_id, started_at, stopped_at, activity_percent, hg_members(full_name)')
@@ -39,6 +35,10 @@ export default function DashboardPage() {
           .eq('organization_id', orgId)
           .eq('is_active', true),
       ]);
+
+      const entries = entriesResult.data;
+      const memberCount = membersResult.count;
+      const projectCount = projectsResult.count;
 
       const userTotals = new Map<string, { name: string; seconds: number; avgActivity: number; count: number }>();
       let totalSecs = 0;

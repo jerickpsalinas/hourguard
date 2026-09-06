@@ -71,7 +71,7 @@ export default function InvoicesPage() {
     const rate = parseFloat(hourlyRate);
     const totalAmount = totalHours * rate;
 
-    await supabase.from('hg_invoices').insert({
+    const { error: insertError } = await supabase.from('hg_invoices').insert({
       organization_id: member.organizationId,
       project_id: projectId || null,
       created_by: member.id,
@@ -86,6 +86,12 @@ export default function InvoicesPage() {
     });
 
     setGenerating(false);
+
+    if (insertError) {
+      alert('Failed to generate invoice. Please try again.');
+      return;
+    }
+
     setTitle('');
     loadInvoices();
   }

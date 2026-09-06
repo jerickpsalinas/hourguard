@@ -54,7 +54,8 @@ export default function SettingsPage() {
     loadApiKeys();
   }
 
-  async function revokeKey(id: string) {
+  async function revokeKey(id: string, name: string) {
+    if (!confirm(`Revoke API key "${name}"? This cannot be undone.`)) return;
     await supabase.from('hg_api_keys').update({ is_active: false }).eq('id', id);
     loadApiKeys();
   }
@@ -102,7 +103,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   {key.is_active ? (
-                    <button onClick={() => revokeKey(key.id)} className="text-sm text-red-400 hover:text-red-300 transition-colors">
+                    <button onClick={() => revokeKey(key.id, key.name)} className="text-sm text-red-400 hover:text-red-300 transition-colors">
                       Revoke
                     </button>
                   ) : (

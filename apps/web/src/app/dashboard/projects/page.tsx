@@ -10,6 +10,7 @@ export default function ProjectsPage() {
   const [newName, setNewName] = useState('');
   const supabase = createClient();
   const { member } = useAuth();
+  const isAdmin = member?.role === 'owner' || member?.role === 'manager';
 
   useEffect(() => {
     if (member) loadProjects();
@@ -49,10 +50,12 @@ export default function ProjectsPage() {
     <div>
       <h1 className="text-2xl font-display font-bold mb-1">Projects</h1>
       <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// manage projects</p>
-      <form onSubmit={addProject} className="flex gap-3 mb-6">
-        <input type="text" placeholder="New project name" value={newName} onChange={(e) => setNewName(e.target.value)} className={inputClass} />
-        <button type="submit" className="btn-brand px-4 py-2.5 text-sm">Add Project</button>
-      </form>
+      {isAdmin && (
+        <form onSubmit={addProject} className="flex gap-3 mb-6">
+          <input type="text" placeholder="New project name" value={newName} onChange={(e) => setNewName(e.target.value)} className={inputClass} />
+          <button type="submit" className="btn-brand px-4 py-2.5 text-sm">Add Project</button>
+        </form>
+      )}
       {loading ? (
         <p className="text-white/40">Loading...</p>
       ) : projects.length === 0 ? (
@@ -65,12 +68,14 @@ export default function ProjectsPage() {
                 <p className="font-medium">{p.name}</p>
                 <p className="text-xs text-white/40">{p.is_active ? 'Active' : 'Archived'}</p>
               </div>
-              <button
-                onClick={() => toggleProject(p.id, p.is_active)}
-                className="text-sm text-white/40 hover:text-brand transition-colors"
-              >
-                {p.is_active ? 'Archive' : 'Restore'}
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => toggleProject(p.id, p.is_active)}
+                  className="text-sm text-white/40 hover:text-brand transition-colors"
+                >
+                  {p.is_active ? 'Archive' : 'Restore'}
+                </button>
+              )}
             </div>
           ))}
         </div>

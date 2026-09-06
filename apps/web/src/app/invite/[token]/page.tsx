@@ -81,6 +81,20 @@ export default function InvitePage() {
       return;
     }
 
+    const { error: portalError } = await supabase.from('portal_users').insert({
+      auth_user_id: authData.user.id,
+      organization_id: invite.organization_id,
+      full_name: fullName,
+      email,
+      role: invite.role,
+    });
+
+    if (portalError) {
+      setError('Failed to create portal profile');
+      setSubmitting(false);
+      return;
+    }
+
     const { error: memberError } = await supabase.from('hg_members').insert({
       auth_user_id: authData.user.id,
       organization_id: invite.organization_id,
@@ -145,9 +159,17 @@ export default function InvitePage() {
           </div>
           <h1 className="text-2xl font-display font-bold mb-4">Welcome to {orgName}!</h1>
           <p className="text-sm text-white/50 mb-6">Your account has been created. You can now sign in and start tracking time.</p>
-          <button onClick={() => router.push('/dashboard')} className="btn-brand px-6 py-2.5 text-sm">
-            Go to Dashboard
-          </button>
+          <div className="flex flex-col gap-3">
+            <button onClick={() => router.push('/dashboard')} className="btn-brand px-6 py-2.5 text-sm">
+              Go to Dashboard
+            </button>
+            <a href="/download" className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-6 py-2.5 text-sm text-white/70 hover:bg-white/[0.1] hover:text-white transition-colors">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download Desktop Tracker
+            </a>
+          </div>
         </div>
       </div>
     );
