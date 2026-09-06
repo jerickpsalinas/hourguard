@@ -63,7 +63,17 @@ export default function ScreenshotsPage() {
         aria-label="Select date"
       />
       {loading ? (
-        <p className="text-white/40">Loading...</p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="glass-card overflow-hidden animate-pulse">
+              <div className="w-full aspect-video bg-white/[0.06]" />
+              <div className="p-2 space-y-1">
+                <div className="h-3 w-20 rounded bg-white/[0.08]" />
+                <div className="h-3 w-28 rounded bg-white/[0.06]" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : screenshots.length === 0 ? (
         <p className="text-white/40">No screenshots for this date.</p>
       ) : (

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
+import { CopyButton } from '@/components/copy-button';
+import { SkeletonRows } from '@/components/skeleton';
 
 export default function MembersPage() {
   const [members, setMembers] = useState<any[]>([]);
@@ -90,12 +92,15 @@ export default function MembersPage() {
       {inviteLink && (
         <div className="mb-6 glass-card border-green-500/20 p-4">
           <p className="text-sm mb-1 text-green-400">Invite link created:</p>
-          <code className="text-xs text-green-400/80 font-mono break-all">{inviteLink}</code>
+          <div className="flex items-start gap-2">
+            <code className="text-xs text-green-400/80 font-mono break-all flex-1">{inviteLink}</code>
+            <CopyButton text={inviteLink} />
+          </div>
         </div>
       )}
 
       {loading ? (
-        <p className="text-white/40">Loading...</p>
+        <SkeletonRows count={3} />
       ) : members.length === 0 ? (
         <p className="text-white/40">No members yet.</p>
       ) : (

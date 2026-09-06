@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
+import { SkeletonRows } from '@/components/skeleton';
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
@@ -122,8 +123,25 @@ export default function InvoicesPage() {
         </button>
       </form>
 
+      {!loading && invoices.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="glass-card p-4">
+            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Total Invoiced</p>
+            <p className="text-xl font-display font-bold">${invoices.reduce((s, i) => s + (i.total_amount ?? 0), 0).toFixed(2)}</p>
+          </div>
+          <div className="glass-card p-4">
+            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Drafts</p>
+            <p className="text-xl font-display font-bold text-yellow-400">{invoices.filter((i) => i.status === 'draft').length}</p>
+          </div>
+          <div className="glass-card p-4">
+            <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Finalized</p>
+            <p className="text-xl font-display font-bold text-green-400">{invoices.filter((i) => i.status === 'finalized').length}</p>
+          </div>
+        </div>
+      )}
+
       {loading ? (
-        <p className="text-white/40">Loading...</p>
+        <SkeletonRows count={3} />
       ) : invoices.length === 0 ? (
         <p className="text-white/40">No invoices yet.</p>
       ) : (

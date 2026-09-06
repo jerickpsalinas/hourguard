@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
+import { SkeletonRows } from '@/components/skeleton';
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
@@ -57,7 +58,7 @@ export default function ProjectsPage() {
         </form>
       )}
       {loading ? (
-        <p className="text-white/40">Loading...</p>
+        <SkeletonRows count={3} />
       ) : projects.length === 0 ? (
         <p className="text-white/40">No projects yet. Create one above.</p>
       ) : (

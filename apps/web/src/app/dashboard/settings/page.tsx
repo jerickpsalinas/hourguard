@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
+import { CopyButton } from '@/components/copy-button';
+import { SkeletonRows } from '@/components/skeleton';
 
 export default function SettingsPage() {
   const [apiKeys, setApiKeys] = useState<any[]>([]);
@@ -82,12 +84,15 @@ export default function SettingsPage() {
         {generatedKey && (
           <div className="mb-4 glass-card border-yellow-500/20 p-4">
             <p className="text-sm mb-1 text-yellow-400">Copy this key now — it won&apos;t be shown again:</p>
-            <code className="text-xs text-yellow-200/80 font-mono break-all">{generatedKey}</code>
+            <div className="flex items-start gap-2">
+              <code className="text-xs text-yellow-200/80 font-mono break-all flex-1">{generatedKey}</code>
+              <CopyButton text={generatedKey} />
+            </div>
           </div>
         )}
 
         {loading ? (
-          <p className="text-white/40">Loading...</p>
+          <SkeletonRows count={2} />
         ) : apiKeys.length === 0 ? (
           <p className="text-white/40">No API keys yet.</p>
         ) : (

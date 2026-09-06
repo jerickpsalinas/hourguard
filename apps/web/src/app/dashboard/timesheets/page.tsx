@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
+import { SkeletonTable } from '@/components/skeleton';
 
 export default function TimesheetsPage() {
   const [entries, setEntries] = useState<any[]>([]);
@@ -67,7 +68,7 @@ export default function TimesheetsPage() {
           </thead>
           <tbody className="divide-y divide-white/[0.06]">
             {loading ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-white/40">Loading...</td></tr>
+              <tr><td colSpan={5} className="p-0"><SkeletonTable rows={5} cols={5} /></td></tr>
             ) : entries.length === 0 ? (
               <tr><td colSpan={5} className="px-4 py-8 text-center text-white/40">No time entries for this period.</td></tr>
             ) : (
