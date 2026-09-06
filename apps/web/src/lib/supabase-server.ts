@@ -17,10 +17,21 @@ export function createClient() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set({ name, value, ...options });
+          // In a Server Component render, Next forbids setting cookies and
+          // throws. Supabase may try to write refreshed tokens here; swallow it
+          // — the middleware is what actually refreshes and persists the session.
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            /* called from a Server Component; ignore */
+          }
         },
         remove(name: string, options: CookieOptions) {
-          cookieStore.set({ name, value: '', ...options });
+          try {
+            cookieStore.set({ name, value: '', ...options });
+          } catch {
+            /* called from a Server Component; ignore */
+          }
         },
       },
     }
