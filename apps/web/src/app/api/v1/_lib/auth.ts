@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase-server';
+import { sha256Hex } from '@/lib/api-key';
 
 export interface ApiContext {
   organizationId: string;
@@ -18,12 +19,7 @@ export async function authenticateApiKey(
   }
 
   const rawKey = authHeader.slice(7);
-
-  const encoder = new TextEncoder();
-  const data = encoder.encode(rawKey);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const keyHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+  const keyHash = await sha256Hex(rawKey);
 
   const supabase = createServiceClient();
 

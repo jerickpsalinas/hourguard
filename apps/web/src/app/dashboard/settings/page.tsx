@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { CopyButton } from '@/components/copy-button';
 import { SkeletonRows } from '@/components/skeleton';
 import { useToast } from '@/components/toast';
+import { generateApiKey, sha256Hex } from '@/lib/api-key';
 
 export default function SettingsPage() {
   const [apiKeys, setApiKeys] = useState<any[]>([]);
@@ -36,14 +37,9 @@ export default function SettingsPage() {
     e.preventDefault();
     if (!newKeyName.trim() || !member) return;
 
-    const rawKey = `hg_${crypto.randomUUID().replace(/-/g, '')}`;
+    const rawKey = generateApiKey();
     const prefix = rawKey.substring(0, 8);
-
-    const encoder = new TextEncoder();
-    const data = encoder.encode(rawKey);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const keyHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    const keyHash = await sha256Hex(rawKey);
 
     const { error } = await supabase.from('hg_api_keys').insert({
       organization_id: member.organizationId,
