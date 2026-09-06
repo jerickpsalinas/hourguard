@@ -59,62 +59,54 @@ export default function SettingsPage() {
     loadApiKeys();
   }
 
+  const inputClass = 'flex-1 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder-white/40 focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">Settings</h1>
+      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// configuration</p>
 
       <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">API Keys</h2>
-        <p className="text-sm text-slate-400 mb-4">
+        <h2 className="text-lg font-display font-semibold mb-4">API Keys</h2>
+        <p className="text-sm text-white/50 mb-4">
           Generate API keys for external integrations (n8n, Zapier, etc.). Pass the key as{' '}
-          <code className="text-xs bg-slate-800 px-1.5 py-0.5 rounded">Authorization: Bearer &lt;key&gt;</code>
+          <code className="text-xs bg-white/[0.06] border border-white/10 px-1.5 py-0.5 rounded font-mono">Authorization: Bearer &lt;key&gt;</code>
         </p>
 
         <form onSubmit={createApiKey} className="flex gap-3 mb-4">
-          <input
-            type="text"
-            placeholder="Key name (e.g. n8n-integration)"
-            value={newKeyName}
-            onChange={(e) => setNewKeyName(e.target.value)}
-            className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm"
-          />
-          <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold hover:bg-blue-700">
-            Generate Key
-          </button>
+          <input type="text" placeholder="Key name (e.g. n8n-integration)" value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} className={inputClass} />
+          <button type="submit" className="btn-brand px-4 py-2.5 text-sm">Generate Key</button>
         </form>
 
         {generatedKey && (
-          <div className="mb-4 rounded-lg border border-yellow-800 bg-yellow-900/20 p-4">
+          <div className="mb-4 glass-card border-yellow-500/20 p-4">
             <p className="text-sm mb-1 text-yellow-400">Copy this key now — it won&apos;t be shown again:</p>
-            <code className="text-xs text-yellow-200 break-all">{generatedKey}</code>
+            <code className="text-xs text-yellow-200/80 font-mono break-all">{generatedKey}</code>
           </div>
         )}
 
         {loading ? (
-          <p className="text-slate-400">Loading...</p>
+          <p className="text-white/40">Loading...</p>
         ) : apiKeys.length === 0 ? (
-          <p className="text-slate-400">No API keys yet.</p>
+          <p className="text-white/40">No API keys yet.</p>
         ) : (
           <div className="space-y-2">
             {apiKeys.map((key) => (
-              <div key={key.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
+              <div key={key.id} className="flex items-center justify-between glass-card p-4">
                 <div>
                   <p className="font-medium">{key.name}</p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-white/40 font-mono">
                     {key.key_prefix}... | Created {new Date(key.created_at).toLocaleDateString()}
                     {key.last_used_at && ` | Last used ${new Date(key.last_used_at).toLocaleDateString()}`}
                   </p>
                 </div>
                 <div>
                   {key.is_active ? (
-                    <button
-                      onClick={() => revokeKey(key.id)}
-                      className="text-sm text-red-400 hover:text-red-300"
-                    >
+                    <button onClick={() => revokeKey(key.id)} className="text-sm text-red-400 hover:text-red-300 transition-colors">
                       Revoke
                     </button>
                   ) : (
-                    <span className="text-xs text-slate-500">Revoked</span>
+                    <span className="text-xs text-white/30">Revoked</span>
                   )}
                 </div>
               </div>

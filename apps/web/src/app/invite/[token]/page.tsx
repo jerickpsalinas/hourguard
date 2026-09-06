@@ -104,12 +104,14 @@ export default function InvitePage() {
     setSubmitting(false);
   }
 
+  const inputClass = 'w-full rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder-white/40 focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-600 border-t-blue-500" />
-          <p className="text-sm text-slate-400">Verifying invite...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-brand" />
+          <p className="text-sm text-white/50">Verifying invite...</p>
         </div>
       </div>
     );
@@ -119,9 +121,14 @@ export default function InvitePage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="w-full max-w-sm text-center p-8">
-          <h1 className="text-2xl font-bold mb-4">Invalid Invite</h1>
-          <p className="text-sm text-slate-400 mb-6">{error}</p>
-          <a href="/login" className="text-sm text-blue-400 hover:underline">Go to login</a>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 mb-4">
+            <svg className="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-display font-bold mb-4">Invalid Invite</h1>
+          <p className="text-sm text-white/50 mb-6">{error}</p>
+          <a href="/login" className="text-sm text-brand hover:underline">Go to login</a>
         </div>
       </div>
     );
@@ -131,12 +138,14 @@ export default function InvitePage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="w-full max-w-sm text-center p-8">
-          <h1 className="text-2xl font-bold mb-4">Welcome to {orgName}!</h1>
-          <p className="text-sm text-slate-400 mb-6">Your account has been created. You can now sign in and start tracking time.</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold hover:bg-blue-700"
-          >
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 border border-green-500/20 mb-4">
+            <svg className="w-6 h-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-display font-bold mb-4">Welcome to {orgName}!</h1>
+          <p className="text-sm text-white/50 mb-6">Your account has been created. You can now sign in and start tracking time.</p>
+          <button onClick={() => router.push('/dashboard')} className="btn-brand px-6 py-2.5 text-sm">
             Go to Dashboard
           </button>
         </div>
@@ -146,49 +155,30 @@ export default function InvitePage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 p-8">
-        <div className="text-center mb-2">
-          <h1 className="text-2xl font-bold">Join {orgName}</h1>
-          <p className="text-sm text-slate-400 mt-1">You&apos;ve been invited as <span className="capitalize text-slate-300">{invite?.role}</span></p>
+      <div className="w-full max-w-sm p-8">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl btn-brand glow-pulse mb-4">
+            <svg className="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-display font-bold">Join {orgName}</h1>
+          <p className="text-sm text-white/50 mt-1">You&apos;ve been invited as <span className="capitalize text-white/70">{invite?.role}</span></p>
         </div>
-        <input
-          type="text"
-          placeholder="Full Name"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm"
-          required
-        />
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm"
-          required
-          readOnly={!!invite?.email}
-        />
-        <input
-          type="password"
-          placeholder="Password (min 6 characters)"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm"
-          required
-          minLength={6}
-        />
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
-        >
-          {submitting ? 'Creating account...' : 'Accept Invite & Create Account'}
-        </button>
-        {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-        <p className="text-sm text-slate-400 text-center">
-          Already have an account? <a href="/login" className="text-blue-400 hover:underline">Sign in</a>
-        </p>
-      </form>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="text" placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} required />
+          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required readOnly={!!invite?.email} />
+          <input type="password" placeholder="Password (min 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required minLength={6} />
+          <button type="submit" disabled={submitting} className="w-full btn-brand py-2.5 text-sm">
+            {submitting ? 'Creating account...' : 'Accept Invite & Create Account'}
+          </button>
+          {error && <p className="text-sm text-red-400 text-center">{error}</p>}
+          <p className="text-sm text-white/40 text-center">
+            Already have an account? <a href="/login" className="text-brand hover:underline">Sign in</a>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

@@ -42,23 +42,24 @@ export default function ScreenshotsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Screenshots</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">Screenshots</h1>
+      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// activity captures</p>
       <input
         type="date"
         value={selectedDate}
         onChange={(e) => setSelectedDate(e.target.value)}
-        className="mb-6 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
+        className="mb-6 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors"
       />
       {loading ? (
-        <p className="text-slate-400">Loading...</p>
+        <p className="text-white/40">Loading...</p>
       ) : screenshots.length === 0 ? (
-        <p className="text-slate-400">No screenshots for this date.</p>
+        <p className="text-white/40">No screenshots for this date.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {screenshots.map((ss) => (
             <div
               key={ss.id}
-              className="cursor-pointer rounded-lg border border-slate-800 overflow-hidden hover:border-slate-600 transition-colors"
+              className="cursor-pointer glass-card overflow-hidden hover:border-white/20 transition-colors"
               onClick={() => setExpandedUrl(ss.url)}
             >
               {ss.url && (
@@ -66,7 +67,7 @@ export default function ScreenshotsPage() {
               )}
               <div className="p-2">
                 <p className="text-xs font-medium">{(ss as any).hg_members?.full_name}</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-white/40">
                   {new Date(ss.captured_at).toLocaleTimeString()} — {ss.activity_percent}%
                 </p>
               </div>
@@ -77,10 +78,10 @@ export default function ScreenshotsPage() {
 
       {expandedUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={() => setExpandedUrl(null)}
         >
-          <img src={expandedUrl} alt="Screenshot" className="max-w-[90vw] max-h-[90vh] rounded-lg" />
+          <img src={expandedUrl} alt="Screenshot" className="max-w-[90vw] max-h-[90vh] rounded-2xl" />
         </div>
       )}
     </div>

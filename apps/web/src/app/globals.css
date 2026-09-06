@@ -1,3 +1,43 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@layer base {
+  * {
+    border-color: hsl(0 0% 24%);
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-[#1c1c1c]/60 backdrop-blur-xl border border-white/[0.08] rounded-2xl;
+    box-shadow: 0 10px 40px hsl(240 30% 2% / 0.35);
+  }
+
+  .btn-brand {
+    background: linear-gradient(135deg, hsl(0 84% 55%), hsl(350 80% 48%));
+    @apply text-white font-semibold rounded-xl transition-all duration-200;
+    box-shadow: 0 0 30px hsl(0 84% 56% / 0.25);
+  }
+
+  .btn-brand:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 40px hsl(0 84% 56% / 0.4);
+  }
+
+  .btn-brand:disabled {
+    @apply opacity-50;
+    transform: none;
+  }
+
+  .glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 20px hsl(0 84% 56% / 0.2); }
+    50% { box-shadow: 0 0 40px hsl(0 84% 56% / 0.4); }
+  }
+}

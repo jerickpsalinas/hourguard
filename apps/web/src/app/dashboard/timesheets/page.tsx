@@ -43,45 +43,38 @@ export default function TimesheetsPage() {
     return `${h}h ${m}m`;
   }
 
+  const inputClass = 'rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Timesheets</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">Timesheets</h1>
+      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// time entries</p>
       <div className="flex gap-4 mb-6">
-        <input
-          type="date"
-          value={fromDate}
-          onChange={(e) => setFromDate(e.target.value)}
-          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-        />
-        <input
-          type="date"
-          value={toDate}
-          onChange={(e) => setToDate(e.target.value)}
-          className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm"
-        />
+        <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={inputClass} />
+        <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={inputClass} />
       </div>
-      <div className="overflow-x-auto rounded-lg border border-slate-800">
+      <div className="overflow-x-auto glass-card">
         <table className="w-full text-sm">
-          <thead className="bg-slate-900">
-            <tr>
-              <th className="text-left px-4 py-3">Employee</th>
-              <th className="text-left px-4 py-3">Project</th>
-              <th className="text-left px-4 py-3">Date</th>
-              <th className="text-left px-4 py-3">Duration</th>
-              <th className="text-left px-4 py-3">Activity</th>
+          <thead>
+            <tr className="border-b border-white/[0.08]">
+              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Employee</th>
+              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Project</th>
+              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Date</th>
+              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Duration</th>
+              <th className="text-left px-4 py-3 text-white/40 font-medium text-xs uppercase tracking-wider">Activity</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800">
+          <tbody className="divide-y divide-white/[0.06]">
             {loading ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">Loading...</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-white/40">Loading...</td></tr>
             ) : entries.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-400">No time entries for this period.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-white/40">No time entries for this period.</td></tr>
             ) : (
               entries.map((entry) => (
-                <tr key={entry.id} className="hover:bg-slate-900/50">
+                <tr key={entry.id} className="hover:bg-white/[0.03] transition-colors">
                   <td className="px-4 py-3">{(entry as any).hg_members?.full_name}</td>
-                  <td className="px-4 py-3 text-slate-400">{(entry as any).hg_projects?.name ?? '—'}</td>
-                  <td className="px-4 py-3 text-slate-400">{new Date(entry.started_at).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-white/50">{(entry as any).hg_projects?.name ?? '—'}</td>
+                  <td className="px-4 py-3 text-white/50">{new Date(entry.started_at).toLocaleDateString()}</td>
                   <td className="px-4 py-3">{formatDuration(entry.started_at, entry.stopped_at)}</td>
                   <td className="px-4 py-3">{entry.activity_percent}%</td>
                 </tr>

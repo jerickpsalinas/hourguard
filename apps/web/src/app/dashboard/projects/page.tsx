@@ -43,36 +43,31 @@ export default function ProjectsPage() {
     loadProjects();
   }
 
+  const inputClass = 'flex-1 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm text-white placeholder-white/40 focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Projects</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">Projects</h1>
+      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// manage projects</p>
       <form onSubmit={addProject} className="flex gap-3 mb-6">
-        <input
-          type="text"
-          placeholder="New project name"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm"
-        />
-        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold hover:bg-blue-700">
-          Add Project
-        </button>
+        <input type="text" placeholder="New project name" value={newName} onChange={(e) => setNewName(e.target.value)} className={inputClass} />
+        <button type="submit" className="btn-brand px-4 py-2.5 text-sm">Add Project</button>
       </form>
       {loading ? (
-        <p className="text-slate-400">Loading...</p>
+        <p className="text-white/40">Loading...</p>
       ) : projects.length === 0 ? (
-        <p className="text-slate-400">No projects yet. Create one above.</p>
+        <p className="text-white/40">No projects yet. Create one above.</p>
       ) : (
         <div className="space-y-2">
           {projects.map((p) => (
-            <div key={p.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
+            <div key={p.id} className="flex items-center justify-between glass-card p-4">
               <div>
                 <p className="font-medium">{p.name}</p>
-                <p className="text-xs text-slate-400">{p.is_active ? 'Active' : 'Archived'}</p>
+                <p className="text-xs text-white/40">{p.is_active ? 'Active' : 'Archived'}</p>
               </div>
               <button
                 onClick={() => toggleProject(p.id, p.is_active)}
-                className="text-sm text-slate-400 hover:text-white transition-colors"
+                className="text-sm text-white/40 hover:text-brand transition-colors"
               >
                 {p.is_active ? 'Archive' : 'Restore'}
               </button>

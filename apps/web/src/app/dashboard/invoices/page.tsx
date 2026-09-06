@@ -90,82 +90,50 @@ export default function InvoicesPage() {
     loadInvoices();
   }
 
+  const inputClass = 'rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white placeholder-white/40 focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Invoices</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">Invoices</h1>
+      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// billing</p>
 
-      <form onSubmit={generateInvoice} className="mb-8 rounded-lg border border-slate-800 bg-slate-900 p-6 space-y-4">
-        <h2 className="font-semibold">Generate Invoice</h2>
+      <form onSubmit={generateInvoice} className="mb-8 glass-card p-6 space-y-4">
+        <h2 className="font-display font-semibold">Generate Invoice</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Invoice title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="sm:col-span-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
-          />
-          <select
-            value={projectId}
-            onChange={(e) => setProjectId(e.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
-          >
+          <input type="text" placeholder="Invoice title" value={title} onChange={(e) => setTitle(e.target.value)} className={`sm:col-span-2 ${inputClass}`} />
+          <select value={projectId} onChange={(e) => setProjectId(e.target.value)} className={inputClass}>
             <option value="">All projects</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
           </select>
-          <input
-            type="number"
-            placeholder="Hourly rate"
-            value={hourlyRate}
-            onChange={(e) => setHourlyRate(e.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
-            min="0"
-            step="0.01"
-            required
-          />
-          <input
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
-            required
-          />
-          <input
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
-            required
-          />
+          <input type="number" placeholder="Hourly rate" value={hourlyRate} onChange={(e) => setHourlyRate(e.target.value)} className={inputClass} min="0" step="0.01" required />
+          <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className={inputClass} required />
+          <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className={inputClass} required />
         </div>
-        <button
-          type="submit"
-          disabled={generating}
-          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
-        >
+        <button type="submit" disabled={generating} className="btn-brand px-4 py-2.5 text-sm">
           {generating ? 'Generating...' : 'Generate Invoice'}
         </button>
       </form>
 
       {loading ? (
-        <p className="text-slate-400">Loading...</p>
+        <p className="text-white/40">Loading...</p>
       ) : invoices.length === 0 ? (
-        <p className="text-slate-400">No invoices yet.</p>
+        <p className="text-white/40">No invoices yet.</p>
       ) : (
         <div className="space-y-2">
           {invoices.map((inv) => (
-            <div key={inv.id} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
+            <div key={inv.id} className="flex items-center justify-between glass-card p-4">
               <div>
                 <p className="font-medium">{inv.title}</p>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-white/40">
                   {inv.from_date} — {inv.to_date} | {(inv as any).hg_projects?.name ?? 'All projects'}
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-semibold">${inv.total_amount.toFixed(2)}</p>
-                <p className="text-xs text-slate-400">{inv.total_hours}h @ ${inv.hourly_rate}/h</p>
-                <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs ${inv.status === 'finalized' ? 'bg-green-900 text-green-400' : 'bg-yellow-900 text-yellow-400'}`}>
+                <p className="font-display font-semibold">${inv.total_amount.toFixed(2)}</p>
+                <p className="text-xs text-white/40">{inv.total_hours}h @ ${inv.hourly_rate}/h</p>
+                <span className={`inline-block mt-1 rounded-full px-2 py-0.5 text-xs ${inv.status === 'finalized' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20'}`}>
                   {inv.status}
                 </span>
               </div>

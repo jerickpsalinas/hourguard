@@ -74,7 +74,8 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-6">Today&apos;s Overview</h1>
+      <h1 className="text-2xl font-display font-bold mb-1">Today&apos;s Overview</h1>
+      <p className="text-sm text-white/40 font-mono text-xs tracking-wider uppercase mb-6">// dashboard</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
@@ -82,31 +83,31 @@ export default function DashboardPage() {
           { label: 'Active Members', value: stats.members },
           { label: 'Active Projects', value: stats.projects },
         ].map((card) => (
-          <div key={card.label} className="rounded-lg border border-slate-800 bg-slate-900 p-5">
-            <p className="text-sm text-slate-400">{card.label}</p>
-            <p className={`text-2xl font-bold mt-1 ${loading ? 'animate-pulse text-slate-600' : ''}`}>
+          <div key={card.label} className="glass-card p-5">
+            <p className="text-sm text-white/40">{card.label}</p>
+            <p className={`text-2xl font-display font-bold mt-1 ${loading ? 'animate-pulse text-white/20' : ''}`}>
               {loading ? '—' : card.value}
             </p>
           </div>
         ))}
       </div>
 
-      <h2 className="text-lg font-semibold mb-4">Activity by Member</h2>
+      <h2 className="text-lg font-display font-semibold mb-4">Activity by Member</h2>
       <div className="grid gap-3">
         {!loading && summary.length === 0 && (
-          <p className="text-slate-400">No time tracked today.</p>
+          <p className="text-white/40">No time tracked today.</p>
         )}
         {summary.map((user, i) => (
-          <div key={i} className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900 p-4">
+          <div key={i} className="flex items-center justify-between glass-card p-4">
             <div>
               <p className="font-medium">{user.name}</p>
-              <p className="text-sm text-slate-400">{user.hours}h tracked</p>
+              <p className="text-sm text-white/40">{user.hours}h tracked</p>
             </div>
             <div className="text-right">
-              <p className="text-sm">Activity: {user.avgActivity}%</p>
-              <div className="mt-1 h-2 w-24 rounded-full bg-slate-700">
+              <p className="text-sm text-white/70">Activity: {user.avgActivity}%</p>
+              <div className="mt-1 h-2 w-24 rounded-full bg-white/10">
                 <div
-                  className="h-2 rounded-full bg-green-500 transition-all"
+                  className="h-2 rounded-full bg-brand transition-all"
                   style={{ width: `${user.avgActivity}%` }}
                 />
               </div>

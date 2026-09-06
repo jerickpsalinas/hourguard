@@ -27,8 +27,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-600 border-t-blue-500" />
-          <p className="text-sm text-slate-400">Loading...</p>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-brand" />
+          <p className="text-sm text-white/50">Loading...</p>
         </div>
       </div>
     );
@@ -43,8 +43,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center max-w-sm">
-          <p className="text-lg font-semibold mb-2">No membership found</p>
-          <p className="text-sm text-slate-400">Your account is not linked to any organization in Hourguard. Contact your administrator or sign up for a new organization.</p>
+          <p className="text-lg font-display font-semibold mb-2">No membership found</p>
+          <p className="text-sm text-white/50">Your account is not linked to any organization in Hourguard. Contact your administrator or sign up for a new organization.</p>
         </div>
       </div>
     );
@@ -68,14 +68,23 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       )}
 
       <aside className={`
-        fixed inset-y-0 left-0 z-40 w-64 border-r border-slate-800 bg-slate-900 p-5 flex flex-col
+        fixed inset-y-0 left-0 z-40 w-64 border-r border-white/[0.08] bg-[#0a0a0a] p-5 flex flex-col
         transform transition-transform duration-200 ease-out
         lg:static lg:translate-x-0
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="mb-8">
-          <h2 className="text-lg font-bold tracking-tight">Hourguard</h2>
-          {orgName && <p className="text-xs text-slate-400 mt-1">{orgName}</p>}
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl btn-brand flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm font-display font-bold tracking-tight">Hourguard</h2>
+              {orgName && <p className="text-[10px] text-white/40 font-mono uppercase tracking-wider">// {orgName}</p>}
+            </div>
+          </div>
         </div>
 
         <nav className="space-y-1 flex-1">
@@ -84,10 +93,10 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
                 isActive(item.href)
-                  ? 'bg-blue-600/20 text-blue-400 font-medium'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                  ? 'bg-brand/10 text-brand font-medium'
+                  : 'text-white/40 hover:bg-white/[0.06] hover:text-white/70'
               }`}
             >
               <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -98,16 +107,16 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           ))}
         </nav>
 
-        <div className="border-t border-slate-800 pt-4 mt-4">
+        <div className="border-t border-white/[0.08] pt-4 mt-4">
           {member && (
             <>
               <p className="text-sm font-medium">{member.fullName}</p>
-              <p className="text-xs text-slate-400 capitalize">{member.role}</p>
+              <p className="text-xs text-white/40 capitalize">{member.role}</p>
             </>
           )}
           <button
             onClick={handleLogout}
-            className="mt-3 flex items-center gap-2 text-sm text-slate-400 hover:text-red-400 transition-colors"
+            className="mt-3 flex items-center gap-2 text-sm text-white/40 hover:text-brand transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -118,17 +127,17 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-slate-800 bg-slate-950/80 backdrop-blur px-6 py-3 lg:hidden">
+        <header className="sticky top-0 z-20 flex items-center gap-4 border-b border-white/[0.08] bg-black/80 backdrop-blur px-6 py-3 lg:hidden">
           <button
             onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+            className="rounded-xl p-1.5 text-white/40 hover:bg-white/[0.06] hover:text-white"
             aria-label="Open menu"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-sm font-semibold">Hourguard</span>
+          <span className="text-sm font-display font-semibold">Hourguard</span>
         </header>
         <main className="flex-1 p-6 lg:p-8">{children}</main>
       </div>
