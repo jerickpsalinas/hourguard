@@ -50,8 +50,8 @@ export default function LoginPage() {
 
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="space-y-4">
-            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
-            <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required />
+            <input type="email" placeholder="Email" aria-label="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
+            <input type="password" placeholder="Password" aria-label="Password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required />
             <button type="submit" disabled={loading} className="w-full btn-brand py-2.5 text-sm">
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
@@ -68,7 +68,7 @@ export default function LoginPage() {
         {mode === 'forgot' && (
           <form onSubmit={handleForgotPassword} className="space-y-4">
             <p className="text-sm text-white/50 text-center">Enter your email and we&apos;ll send you a reset link.</p>
-            <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
+            <input type="email" placeholder="Email" aria-label="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required />
             <button type="submit" disabled={loading} className="w-full btn-brand py-2.5 text-sm">
               {loading ? 'Sending...' : 'Send Reset Link'}
             </button>

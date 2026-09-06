@@ -200,9 +200,9 @@ export default function InvitePage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="text" placeholder="Full Name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} required />
-          <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required readOnly={!!invite?.email} />
-          <input type="password" placeholder="Password (min 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required minLength={6} />
+          <input type="text" placeholder="Full Name" aria-label="Full name" autoComplete="name" value={fullName} onChange={(e) => setFullName(e.target.value)} className={inputClass} required />
+          <input type="email" placeholder="Email" aria-label="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} required readOnly={!!invite?.email} />
+          <input type="password" placeholder="Password (min 6 characters)" aria-label="Password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required minLength={6} />
           <button type="submit" disabled={submitting} className="w-full btn-brand py-2.5 text-sm">
             {submitting ? 'Creating account...' : 'Accept Invite & Create Account'}
           </button>

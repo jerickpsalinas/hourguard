@@ -84,8 +84,8 @@ export default function ResetPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input type="password" placeholder="New password (min 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required minLength={6} />
-            <input type="password" placeholder="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} required minLength={6} />
+            <input type="password" placeholder="New password (min 6 characters)" aria-label="New password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} required minLength={6} />
+            <input type="password" placeholder="Confirm new password" aria-label="Confirm new password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={inputClass} required minLength={6} />
             <button type="submit" disabled={loading} className="w-full btn-brand py-2.5 text-sm">
               {loading ? 'Updating...' : 'Update Password'}
             </button>
