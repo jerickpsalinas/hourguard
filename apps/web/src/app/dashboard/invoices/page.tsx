@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { SkeletonRows } from '@/components/skeleton';
 import { localRangeBounds } from '@/lib/dates';
 import { formatCurrency } from '@/lib/format';
+import { computeInvoiceTotals } from '@/lib/invoice';
 import { EmptyState } from '@/components/empty-state';
 
 export default function InvoicesPage() {
@@ -78,12 +79,7 @@ export default function InvoicesPage() {
 
     const { data: entries } = await query;
 
-    const totalSeconds = (entries ?? []).reduce((sum, e) => {
-      return sum + (new Date(e.stopped_at!).getTime() - new Date(e.started_at).getTime()) / 1000;
-    }, 0);
-
-    const totalHours = totalSeconds / 3600;
-    const totalAmount = totalHours * rate;
+    const { totalHours, totalAmount } = computeInvoiceTotals(entries ?? [], rate);
 
     const { error: insertError } = await supabase.from('hg_invoices').insert({
       organization_id: member.organizationId,
@@ -92,9 +88,9 @@ export default function InvoicesPage() {
       title: title || `Invoice ${fromDate} to ${toDate}`,
       from_date: fromDate,
       to_date: toDate,
-      total_hours: Math.round(totalHours * 100) / 100,
+      total_hours: totalHours,
       hourly_rate: rate,
-      total_amount: Math.round(totalAmount * 100) / 100,
+      total_amount: totalAmount,
       currency: 'USD',
       status: 'draft',
     });
@@ -109,7 +105,7 @@ export default function InvoicesPage() {
     setTitle('');
     setFormMessage({
       type: 'success',
-      text: `Invoice created — ${totalHours.toFixed(1)}h totaling ${formatCurrency(Math.round(totalAmount * 100) / 100)}.`,
+      text: `Invoice created — ${totalHours.toFixed(1)}h totaling ${formatCurrency(totalAmount)}.`,
     });
     loadInvoices();
   }

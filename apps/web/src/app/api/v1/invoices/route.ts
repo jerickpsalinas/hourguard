@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateApiKey, paginate } from '../_lib/auth';
 import { createServiceClient } from '@/lib/supabase-server';
+import { computeInvoiceTotals } from '@/lib/invoice';
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
@@ -96,12 +97,7 @@ export async function POST(request: NextRequest) {
 
   const { data: entries } = await query;
 
-  const totalSeconds = (entries ?? []).reduce((sum, e) => {
-    return sum + (new Date(e.stopped_at!).getTime() - new Date(e.started_at).getTime()) / 1000;
-  }, 0);
-
-  const totalHours = Math.round((totalSeconds / 3600) * 100) / 100;
-  const totalAmount = Math.round(totalHours * hourly_rate * 100) / 100;
+  const { totalHours, totalAmount } = computeInvoiceTotals(entries ?? [], hourly_rate);
 
   const { data: invoice, error } = await supabase
     .from('hg_invoices')
