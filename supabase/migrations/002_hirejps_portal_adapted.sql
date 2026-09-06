@@ -2,7 +2,16 @@
 -- Hourguard adapted for hirejps-portal
 -- Prefixed `hg_` to avoid collisions with existing tables (organizations, etc)
 -- Assumes current_org_id() already exists (used by ft_ tables)
+-- Idempotent: safe to run the whole file more than once.
 -- ============================================================================
+
+-- ---------- Prerequisites on the shared portal tables ----------
+-- Product gating column (existing orgs default to bookkeeping-only).
+alter table organizations add column if not exists access_type text[] not null default '{bookkeeping}';
+-- Hourguard writes email + role onto the portal identity row; the base portal
+-- schema doesn't define them, so add them (nullable) if missing.
+alter table portal_users add column if not exists email text;
+alter table portal_users add column if not exists role text;
 
 -- hg_members: role-per-org membership (owner / manager / employee)
 create table if not exists hg_members (
@@ -125,9 +134,14 @@ create or replace function hg_current_role() returns text as $$
   limit 1
 $$ language sql security definer stable;
 
+grant execute on function hg_current_member_id() to authenticated;
+grant execute on function hg_current_role() to authenticated;
+
 -- Members
+drop policy if exists "hg_members: see own org" on hg_members;
 create policy "hg_members: see own org" on hg_members
   for select using (organization_id = current_org_id());
+drop policy if exists "hg_members: owner+manager manage" on hg_members;
 create policy "hg_members: owner+manager manage" on hg_members
   for all using (
     organization_id = current_org_id()
@@ -135,8 +149,10 @@ create policy "hg_members: owner+manager manage" on hg_members
   );
 
 -- Projects
+drop policy if exists "hg_projects: see org" on hg_projects;
 create policy "hg_projects: see org" on hg_projects
   for select using (organization_id = current_org_id());
+drop policy if exists "hg_projects: manage" on hg_projects;
 create policy "hg_projects: manage" on hg_projects
   for all using (
     organization_id = current_org_id()
@@ -144,29 +160,36 @@ create policy "hg_projects: manage" on hg_projects
   );
 
 -- Time entries
+drop policy if exists "hg_time_entries: see own" on hg_time_entries;
 create policy "hg_time_entries: see own" on hg_time_entries
   for select using (member_id = hg_current_member_id());
+drop policy if exists "hg_time_entries: managers see org" on hg_time_entries;
 create policy "hg_time_entries: managers see org" on hg_time_entries
   for select using (
     organization_id = current_org_id()
     and hg_current_role() in ('owner', 'manager')
   );
+drop policy if exists "hg_time_entries: insert own" on hg_time_entries;
 create policy "hg_time_entries: insert own" on hg_time_entries
   for insert with check (
     member_id = hg_current_member_id()
     and organization_id = current_org_id()
   );
+drop policy if exists "hg_time_entries: update own" on hg_time_entries;
 create policy "hg_time_entries: update own" on hg_time_entries
   for update using (member_id = hg_current_member_id());
 
 -- Screenshots
+drop policy if exists "hg_screenshots: see own" on hg_screenshots;
 create policy "hg_screenshots: see own" on hg_screenshots
   for select using (member_id = hg_current_member_id());
+drop policy if exists "hg_screenshots: managers see org" on hg_screenshots;
 create policy "hg_screenshots: managers see org" on hg_screenshots
   for select using (
     organization_id = current_org_id()
     and hg_current_role() in ('owner', 'manager')
   );
+drop policy if exists "hg_screenshots: insert own" on hg_screenshots;
 create policy "hg_screenshots: insert own" on hg_screenshots
   for insert with check (
     member_id = hg_current_member_id()
@@ -174,11 +197,13 @@ create policy "hg_screenshots: insert own" on hg_screenshots
   );
 
 -- Invites
+drop policy if exists "hg_invites: managers see org" on hg_invites;
 create policy "hg_invites: managers see org" on hg_invites
   for select using (
     organization_id = current_org_id()
     and hg_current_role() in ('owner', 'manager')
   );
+drop policy if exists "hg_invites: managers manage" on hg_invites;
 create policy "hg_invites: managers manage" on hg_invites
   for all using (
     organization_id = current_org_id()
@@ -186,11 +211,13 @@ create policy "hg_invites: managers manage" on hg_invites
   );
 
 -- API keys
+drop policy if exists "hg_api_keys: managers see" on hg_api_keys;
 create policy "hg_api_keys: managers see" on hg_api_keys
   for select using (
     organization_id = current_org_id()
     and hg_current_role() in ('owner', 'manager')
   );
+drop policy if exists "hg_api_keys: owners manage" on hg_api_keys;
 create policy "hg_api_keys: owners manage" on hg_api_keys
   for all using (
     organization_id = current_org_id()
@@ -198,13 +225,49 @@ create policy "hg_api_keys: owners manage" on hg_api_keys
   );
 
 -- Invoices
+drop policy if exists "hg_invoices: managers see" on hg_invoices;
 create policy "hg_invoices: managers see" on hg_invoices
   for select using (
     organization_id = current_org_id()
     and hg_current_role() in ('owner', 'manager')
   );
+drop policy if exists "hg_invoices: managers manage" on hg_invoices;
 create policy "hg_invoices: managers manage" on hg_invoices
   for all using (
     organization_id = current_org_id()
     and hg_current_role() in ('owner', 'manager')
   );
+
+-- ---------- Grants ----------
+-- Tables created from the SQL editor don't get Supabase's default role grants,
+-- so the dashboard (authenticated role, reading hg_ tables directly) would hit
+-- permission-denied without these. RLS above still restricts every row.
+grant select, insert, update, delete on table
+  hg_members, hg_projects, hg_time_entries, hg_screenshots,
+  hg_invites, hg_api_keys, hg_invoices
+to authenticated;
+
+-- ---------- Storage: screenshots bucket ----------
+-- Private bucket (images served via signed URLs). The desktop tracker uploads
+-- directly with the employee's session, so authenticated users may read/write
+-- only within their own org's folder. Paths are `<organization_id>/<member_id>/...`,
+-- so the first path segment must equal the caller's org.
+insert into storage.buckets (id, name, public)
+values ('screenshots', 'screenshots', false)
+on conflict (id) do nothing;
+
+drop policy if exists "hg screenshots: read own org" on storage.objects;
+create policy "hg screenshots: read own org" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'screenshots' and (storage.foldername(name))[1] = current_org_id()::text);
+
+drop policy if exists "hg screenshots: insert own org" on storage.objects;
+create policy "hg screenshots: insert own org" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'screenshots' and (storage.foldername(name))[1] = current_org_id()::text);
+
+drop policy if exists "hg screenshots: update own org" on storage.objects;
+create policy "hg screenshots: update own org" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'screenshots' and (storage.foldername(name))[1] = current_org_id()::text)
+  with check (bucket_id = 'screenshots' and (storage.foldername(name))[1] = current_org_id()::text);
