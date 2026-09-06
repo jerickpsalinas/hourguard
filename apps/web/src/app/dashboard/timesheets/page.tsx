@@ -9,6 +9,10 @@ import { localDateKey, localRangeBounds } from '@/lib/dates';
 
 export default function TimesheetsPage() {
   const [entries, setEntries] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [memberFilter, setMemberFilter] = useState('');
+  const [projectFilter, setProjectFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
@@ -18,6 +22,23 @@ export default function TimesheetsPage() {
   const [toDate, setToDate] = useState(() => localDateKey(new Date()));
   const supabase = createClient();
   const { member } = useAuth();
+  const isAdmin = member?.role === 'owner' || member?.role === 'manager';
+
+  // Load filter options once (members only matter for managers; RLS limits
+  // employees to their own entries regardless).
+  useEffect(() => {
+    if (!member) return;
+    (async () => {
+      const [{ data: proj }, { data: mem }] = await Promise.all([
+        supabase.from('hg_projects').select('id, name').eq('organization_id', member.organizationId).order('name'),
+        isAdmin
+          ? supabase.from('hg_members').select('id, full_name').eq('organization_id', member.organizationId).order('full_name')
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+      setProjects(proj ?? []);
+      setMembers(mem ?? []);
+    })();
+  }, [member, isAdmin]);
 
   useEffect(() => {
     if (!member) return;
@@ -25,7 +46,7 @@ export default function TimesheetsPage() {
 
     (async () => {
       const { startISO, endISO } = localRangeBounds(fromDate, toDate);
-      const { data } = await supabase
+      let query = supabase
         .from('hg_time_entries')
         .select('*, hg_members(full_name), hg_projects(name)')
         .eq('organization_id', member.organizationId)
@@ -34,10 +55,14 @@ export default function TimesheetsPage() {
         .order('started_at', { ascending: false })
         .limit(100);
 
+      if (memberFilter) query = query.eq('member_id', memberFilter);
+      if (projectFilter) query = query.eq('project_id', projectFilter);
+
+      const { data } = await query;
       setEntries(data ?? []);
       setLoading(false);
     })();
-  }, [member, fromDate, toDate]);
+  }, [member, fromDate, toDate, memberFilter, projectFilter]);
 
   function formatDuration(start: string, end: string | null) {
     if (!end) return 'In progress';
@@ -87,6 +112,20 @@ export default function TimesheetsPage() {
         <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} max={toDate} className={inputClass} aria-label="From date" />
         <span className="text-white/30 text-sm">to</span>
         <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} min={fromDate} className={inputClass} aria-label="To date" />
+        {isAdmin && (
+          <select value={memberFilter} onChange={(e) => setMemberFilter(e.target.value)} className={inputClass} aria-label="Filter by member">
+            <option value="">All members</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>{m.full_name}</option>
+            ))}
+          </select>
+        )}
+        <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className={inputClass} aria-label="Filter by project">
+          <option value="">All projects</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
         <button
           onClick={exportCsv}
           disabled={loading || entries.length === 0}
