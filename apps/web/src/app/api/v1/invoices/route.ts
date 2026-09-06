@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateApiKey, paginate } from '../_lib/auth';
 import { serverError } from '../_lib/http';
 import { createServiceClient } from '@/lib/supabase-server';
-import { computeInvoiceTotals } from '@/lib/invoice';
+import { computeInvoiceTotals, validateInvoiceInput } from '@/lib/invoice';
 
 export async function GET(request: NextRequest) {
   const auth = await authenticateApiKey(request);
@@ -36,22 +36,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { title, from_date, to_date, project_id } = body;
-  const hourly_rate = Number(body.hourly_rate);
-
-  if (!from_date || !to_date) {
-    return NextResponse.json(
-      { error: 'from_date and to_date are required' },
-      { status: 400 }
-    );
+  const validation = validateInvoiceInput(body);
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
   }
-
-  if (!Number.isFinite(hourly_rate) || hourly_rate < 0) {
-    return NextResponse.json(
-      { error: 'hourly_rate must be a non-negative number' },
-      { status: 400 }
-    );
-  }
+  const { from_date, to_date, hourly_rate } = validation.value;
+  const { title, project_id } = body;
 
   const supabase = createServiceClient();
 

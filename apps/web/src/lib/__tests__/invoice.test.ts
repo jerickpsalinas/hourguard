@@ -1,5 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { computeInvoiceTotals, BillableInterval } from '../invoice';
+import { computeInvoiceTotals, validateInvoiceInput, BillableInterval } from '../invoice';
+
+describe('validateInvoiceInput', () => {
+  it('accepts a valid body and coerces the rate', () => {
+    const r = validateInvoiceInput({ from_date: '2026-06-01', to_date: '2026-06-30', hourly_rate: '50' });
+    expect(r).toEqual({ ok: true, value: { from_date: '2026-06-01', to_date: '2026-06-30', hourly_rate: 50 } });
+  });
+  it('requires from_date and to_date', () => {
+    expect(validateInvoiceInput({ to_date: '2026-06-30', hourly_rate: 10 }).ok).toBe(false);
+    expect(validateInvoiceInput({ from_date: '2026-06-01', hourly_rate: 10 }).ok).toBe(false);
+  });
+  it('rejects a negative or non-numeric rate', () => {
+    expect(validateInvoiceInput({ from_date: 'a', to_date: 'b', hourly_rate: -1 }).ok).toBe(false);
+    expect(validateInvoiceInput({ from_date: 'a', to_date: 'b', hourly_rate: 'abc' }).ok).toBe(false);
+  });
+  it('accepts a zero rate', () => {
+    expect(validateInvoiceInput({ from_date: 'a', to_date: 'b', hourly_rate: 0 }).ok).toBe(true);
+  });
+});
 
 const iv = (startISO: string, hours: number | null): BillableInterval => ({
   started_at: startISO,
