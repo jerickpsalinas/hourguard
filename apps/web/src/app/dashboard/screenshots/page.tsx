@@ -17,16 +17,17 @@ export default function ScreenshotsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: profile } = await supabase
-      .from('profiles')
+    const { data: member } = await supabase
+      .from('hg_members')
       .select('organization_id')
-      .eq('id', user.id)
+      .eq('auth_user_id', user.id)
       .single();
+    if (!member) return;
 
     const { data } = await supabase
-      .from('screenshots')
-      .select('*, profiles(full_name)')
-      .eq('organization_id', profile!.organization_id)
+      .from('hg_screenshots')
+      .select('*, hg_members(full_name)')
+      .eq('organization_id', member.organization_id)
       .gte('captured_at', `${selectedDate}T00:00:00`)
       .lte('captured_at', `${selectedDate}T23:59:59`)
       .order('captured_at', { ascending: false })
@@ -60,14 +61,14 @@ export default function ScreenshotsPage() {
           {screenshots.map((ss) => (
             <div
               key={ss.id}
-              className="cursor-pointer rounded-lg border border-slate-800 overflow-hidden hover:border-slate-600"
+              className="cursor-pointer rounded-lg border border-slate-800 overflow-hidden hover:border-slate-600 transition-colors"
               onClick={() => setExpandedUrl(ss.url)}
             >
               {ss.url && (
                 <img src={ss.url} alt="Screenshot" className="w-full aspect-video object-cover" />
               )}
               <div className="p-2">
-                <p className="text-xs font-medium">{(ss as any).profiles?.full_name}</p>
+                <p className="text-xs font-medium">{(ss as any).hg_members?.full_name}</p>
                 <p className="text-xs text-slate-400">
                   {new Date(ss.captured_at).toLocaleTimeString()} — {ss.activity_percent}%
                 </p>

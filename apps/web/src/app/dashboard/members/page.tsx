@@ -11,20 +11,25 @@ export default function MembersPage() {
 
   useEffect(() => { loadMembers(); }, []);
 
-  async function loadMembers() {
+  async function getOrgId() {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from('profiles')
+    if (!user) return null;
+    const { data: member } = await supabase
+      .from('hg_members')
       .select('organization_id')
-      .eq('id', user.id)
+      .eq('auth_user_id', user.id)
       .single();
+    return member?.organization_id ?? null;
+  }
+
+  async function loadMembers() {
+    const orgId = await getOrgId();
+    if (!orgId) return;
 
     const { data } = await supabase
-      .from('profiles')
+      .from('hg_members')
       .select('*')
-      .eq('organization_id', profile!.organization_id)
+      .eq('organization_id', orgId)
       .order('created_at', { ascending: true });
 
     setMembers(data ?? []);
@@ -33,19 +38,13 @@ export default function MembersPage() {
   async function createInvite(e: React.FormEvent) {
     e.preventDefault();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', user.id)
-      .single();
+    const orgId = await getOrgId();
+    if (!orgId) return;
 
     const token = crypto.randomUUID();
 
-    await supabase.from('invites').insert({
-      organization_id: profile!.organization_id,
+    await supabase.from('hg_invites').insert({
+      organization_id: orgId,
       email: inviteEmail || null,
       token,
       role: 'employee',

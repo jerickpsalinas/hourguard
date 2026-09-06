@@ -10,21 +10,21 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const from = url.searchParams.get('from');
   const to = url.searchParams.get('to');
-  const userId = url.searchParams.get('user_id');
+  const memberId = url.searchParams.get('member_id');
   const projectId = url.searchParams.get('project_id');
 
   const supabase = createServiceClient();
 
   let query = supabase
-    .from('time_entries')
-    .select('*, profiles(full_name, email), projects(name)', { count: 'exact' })
+    .from('hg_time_entries')
+    .select('*, hg_members(full_name, email), hg_projects(name)', { count: 'exact' })
     .eq('organization_id', auth.organizationId)
     .order('started_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (from) query = query.gte('started_at', `${from}T00:00:00`);
   if (to) query = query.lte('started_at', `${to}T23:59:59`);
-  if (userId) query = query.eq('user_id', userId);
+  if (memberId) query = query.eq('member_id', memberId);
   if (projectId) query = query.eq('project_id', projectId);
 
   const { data, count, error } = await query;

@@ -6,7 +6,7 @@ let tray: Tray | null = null;
 export function setupTray(mainWindow: BrowserWindow, tracker: Tracker) {
   const icon = nativeImage.createEmpty();
   tray = new Tray(icon);
-  tray.setToolTip('Hubstaff Mimick');
+  tray.setToolTip('Hourguard');
 
   const updateMenu = () => {
     const isTracking = tracker.isTracking();

@@ -9,13 +9,13 @@ export async function GET(request: NextRequest) {
   const { limit, offset } = paginate(request);
   const url = new URL(request.url);
   const date = url.searchParams.get('date');
-  const userId = url.searchParams.get('user_id');
+  const memberId = url.searchParams.get('member_id');
 
   const supabase = createServiceClient();
 
   let query = supabase
-    .from('screenshots')
-    .select('*, profiles(full_name)', { count: 'exact' })
+    .from('hg_screenshots')
+    .select('*, hg_members(full_name)', { count: 'exact' })
     .eq('organization_id', auth.organizationId)
     .order('captured_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   if (date) {
     query = query.gte('captured_at', `${date}T00:00:00`).lte('captured_at', `${date}T23:59:59`);
   }
-  if (userId) query = query.eq('user_id', userId);
+  if (memberId) query = query.eq('member_id', memberId);
 
   const { data, count, error } = await query;
 

@@ -10,20 +10,25 @@ export default function ProjectsPage() {
 
   useEffect(() => { loadProjects(); }, []);
 
-  async function loadProjects() {
+  async function getOrgId() {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: profile } = await supabase
-      .from('profiles')
+    if (!user) return null;
+    const { data: member } = await supabase
+      .from('hg_members')
       .select('organization_id')
-      .eq('id', user.id)
+      .eq('auth_user_id', user.id)
       .single();
+    return member?.organization_id ?? null;
+  }
+
+  async function loadProjects() {
+    const orgId = await getOrgId();
+    if (!orgId) return;
 
     const { data } = await supabase
-      .from('projects')
+      .from('hg_projects')
       .select('*')
-      .eq('organization_id', profile!.organization_id)
+      .eq('organization_id', orgId)
       .order('created_at', { ascending: false });
 
     setProjects(data ?? []);
@@ -33,17 +38,11 @@ export default function ProjectsPage() {
     e.preventDefault();
     if (!newName.trim()) return;
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const orgId = await getOrgId();
+    if (!orgId) return;
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', user.id)
-      .single();
-
-    await supabase.from('projects').insert({
-      organization_id: profile!.organization_id,
+    await supabase.from('hg_projects').insert({
+      organization_id: orgId,
       name: newName.trim(),
     });
 
@@ -52,7 +51,7 @@ export default function ProjectsPage() {
   }
 
   async function toggleProject(id: string, isActive: boolean) {
-    await supabase.from('projects').update({ is_active: !isActive }).eq('id', id);
+    await supabase.from('hg_projects').update({ is_active: !isActive }).eq('id', id);
     loadProjects();
   }
 
@@ -80,7 +79,7 @@ export default function ProjectsPage() {
             </div>
             <button
               onClick={() => toggleProject(p.id, p.is_active)}
-              className="text-sm text-slate-400 hover:text-white"
+              className="text-sm text-slate-400 hover:text-white transition-colors"
             >
               {p.is_active ? 'Archive' : 'Restore'}
             </button>

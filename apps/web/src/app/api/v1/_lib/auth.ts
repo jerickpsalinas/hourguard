@@ -28,7 +28,7 @@ export async function authenticateApiKey(
   const supabase = createServiceClient();
 
   const { data: apiKey, error } = await supabase
-    .from('api_keys')
+    .from('hg_api_keys')
     .select('id, organization_id')
     .eq('key_hash', keyHash)
     .eq('is_active', true)
@@ -39,7 +39,7 @@ export async function authenticateApiKey(
   }
 
   await supabase
-    .from('api_keys')
+    .from('hg_api_keys')
     .update({ last_used_at: new Date().toISOString() })
     .eq('id', apiKey.id);
 

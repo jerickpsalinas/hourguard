@@ -3,12 +3,14 @@ export type UserRole = 'owner' | 'manager' | 'employee';
 export interface Organization {
   id: string;
   name: string;
+  access_type: string[];
   created_at: string;
 }
 
-export interface Profile {
+export interface Member {
   id: string;
   organization_id: string;
+  auth_user_id: string;
   full_name: string;
   email: string;
   role: UserRole;
@@ -27,7 +29,7 @@ export interface Project {
 
 export interface TimeEntry {
   id: string;
-  user_id: string;
+  member_id: string;
   organization_id: string;
   project_id: string | null;
   started_at: string;
@@ -41,7 +43,7 @@ export interface TimeEntry {
 export interface Screenshot {
   id: string;
   time_entry_id: string;
-  user_id: string;
+  member_id: string;
   organization_id: string;
   storage_path: string;
   captured_at: string;
@@ -89,17 +91,6 @@ export interface Invoice {
   created_at: string;
 }
 
-export interface Database {
-  public: {
-    Tables: {
-      organizations: { Row: Organization };
-      profiles: { Row: Profile };
-      projects: { Row: Project };
-      time_entries: { Row: TimeEntry };
-      screenshots: { Row: Screenshot };
-      invites: { Row: Invite };
-      api_keys: { Row: ApiKey };
-      invoices: { Row: Invoice };
-    };
-  };
-}
+// Minimal Database type — supabase-js uses this for table name inference.
+// For full type safety, generate types with `supabase gen types typescript`.
+export type Database = Record<string, any>;

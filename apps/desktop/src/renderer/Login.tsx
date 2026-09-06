@@ -31,7 +31,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
 
   return (
     <form onSubmit={handleSubmit} style={styles.container}>
-      <h1 style={styles.title}>Hubstaff Mimick</h1>
+      <h1 style={styles.title}>Hourguard</h1>
       <input
         style={styles.input}
         type="email"

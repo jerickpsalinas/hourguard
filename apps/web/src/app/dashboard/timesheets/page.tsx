@@ -21,16 +21,17 @@ export default function TimesheetsPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: profile } = await supabase
-      .from('profiles')
+    const { data: member } = await supabase
+      .from('hg_members')
       .select('organization_id')
-      .eq('id', user.id)
+      .eq('auth_user_id', user.id)
       .single();
+    if (!member) return;
 
     const { data } = await supabase
-      .from('time_entries')
-      .select('*, profiles(full_name), projects(name)')
-      .eq('organization_id', profile!.organization_id)
+      .from('hg_time_entries')
+      .select('*, hg_members(full_name), hg_projects(name)')
+      .eq('organization_id', member.organization_id)
       .gte('started_at', `${fromDate}T00:00:00`)
       .lte('started_at', `${toDate}T23:59:59`)
       .order('started_at', { ascending: false })
@@ -78,8 +79,8 @@ export default function TimesheetsPage() {
           <tbody className="divide-y divide-slate-800">
             {entries.map((entry) => (
               <tr key={entry.id} className="hover:bg-slate-900/50">
-                <td className="px-4 py-3">{(entry as any).profiles?.full_name}</td>
-                <td className="px-4 py-3 text-slate-400">{(entry as any).projects?.name ?? '—'}</td>
+                <td className="px-4 py-3">{(entry as any).hg_members?.full_name}</td>
+                <td className="px-4 py-3 text-slate-400">{(entry as any).hg_projects?.name ?? '—'}</td>
                 <td className="px-4 py-3 text-slate-400">{new Date(entry.started_at).toLocaleDateString()}</td>
                 <td className="px-4 py-3">{formatDuration(entry.started_at, entry.stopped_at)}</td>
                 <td className="px-4 py-3">{entry.activity_percent}%</td>

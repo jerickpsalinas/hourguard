@@ -11,25 +11,25 @@ export default function SettingsPage() {
 
   useEffect(() => { loadApiKeys(); }, []);
 
-  async function getOrgId() {
+  async function getMembership() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', user.id)
+    const { data: member } = await supabase
+      .from('hg_members')
+      .select('id, organization_id')
+      .eq('auth_user_id', user.id)
       .single();
-    return profile?.organization_id;
+    return member;
   }
 
   async function loadApiKeys() {
-    const orgId = await getOrgId();
-    if (!orgId) return;
+    const m = await getMembership();
+    if (!m) return;
 
     const { data } = await supabase
-      .from('api_keys')
+      .from('hg_api_keys')
       .select('*')
-      .eq('organization_id', orgId)
+      .eq('organization_id', m.organization_id)
       .order('created_at', { ascending: false });
 
     setApiKeys(data ?? []);
@@ -39,11 +39,10 @@ export default function SettingsPage() {
     e.preventDefault();
     if (!newKeyName.trim()) return;
 
-    const { data: { user } } = await supabase.auth.getUser();
-    const orgId = await getOrgId();
-    if (!user || !orgId) return;
+    const m = await getMembership();
+    if (!m) return;
 
-    const rawKey = `hm_${crypto.randomUUID().replace(/-/g, '')}`;
+    const rawKey = `hg_${crypto.randomUUID().replace(/-/g, '')}`;
     const prefix = rawKey.substring(0, 8);
 
     const encoder = new TextEncoder();
@@ -52,12 +51,12 @@ export default function SettingsPage() {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const keyHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
-    await supabase.from('api_keys').insert({
-      organization_id: orgId,
+    await supabase.from('hg_api_keys').insert({
+      organization_id: m.organization_id,
       name: newKeyName.trim(),
       key_hash: keyHash,
       key_prefix: prefix,
-      created_by: user.id,
+      created_by: m.id,
     });
 
     setGeneratedKey(rawKey);
@@ -66,7 +65,7 @@ export default function SettingsPage() {
   }
 
   async function revokeKey(id: string) {
-    await supabase.from('api_keys').update({ is_active: false }).eq('id', id);
+    await supabase.from('hg_api_keys').update({ is_active: false }).eq('id', id);
     loadApiKeys();
   }
 

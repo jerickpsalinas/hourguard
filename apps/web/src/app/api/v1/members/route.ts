@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const supabase = createServiceClient();
 
   const { data, error } = await supabase
-    .from('profiles')
+    .from('hg_members')
     .select('id, full_name, email, role, is_active, created_at')
     .eq('organization_id', auth.organizationId)
     .order('full_name');

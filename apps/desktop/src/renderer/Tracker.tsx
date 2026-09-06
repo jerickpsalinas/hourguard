@@ -72,7 +72,7 @@ export default function Tracker({ onLogout }: { onLogout: () => void }) {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <span style={styles.title}>Hubstaff Mimick</span>
+        <span style={styles.title}>Hourguard</span>
         <button style={styles.logoutBtn} onClick={handleLogout}>Logout</button>
       </div>
 

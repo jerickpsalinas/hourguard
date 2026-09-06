@@ -32,7 +32,7 @@ export default function SignupPage() {
 
     const { data: org, error: orgError } = await supabase
       .from('organizations')
-      .insert({ name: orgName })
+      .insert({ name: orgName, access_type: ['hourguard'] })
       .select('id')
       .single();
 
@@ -42,8 +42,8 @@ export default function SignupPage() {
       return;
     }
 
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: authData.user.id,
+    const { error: memberError } = await supabase.from('hg_members').insert({
+      auth_user_id: authData.user.id,
       organization_id: org.id,
       full_name: fullName,
       email,
@@ -52,8 +52,8 @@ export default function SignupPage() {
 
     setLoading(false);
 
-    if (profileError) {
-      setError('Failed to create profile');
+    if (memberError) {
+      setError('Failed to create member profile');
       return;
     }
 

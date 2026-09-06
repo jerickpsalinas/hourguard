@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
   const supabase = createServiceClient();
 
   const { data, count, error } = await supabase
-    .from('invoices')
-    .select('*, projects(name)', { count: 'exact' })
+    .from('hg_invoices')
+    .select('*, hg_projects(name)', { count: 'exact' })
     .eq('organization_id', auth.organizationId)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   const supabase = createServiceClient();
 
   let query = supabase
-    .from('time_entries')
+    .from('hg_time_entries')
     .select('started_at, stopped_at')
     .eq('organization_id', auth.organizationId)
     .not('stopped_at', 'is', null)
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   const totalAmount = Math.round(totalHours * hourly_rate * 100) / 100;
 
   const { data: invoice, error } = await supabase
-    .from('invoices')
+    .from('hg_invoices')
     .insert({
       organization_id: auth.organizationId,
       project_id: project_id || null,

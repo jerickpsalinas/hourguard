@@ -19,38 +19,38 @@ export default function InvoicesPage() {
     loadProjects();
   }, []);
 
-  async function getOrgId() {
+  async function getMembership() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('organization_id')
-      .eq('id', user.id)
+    const { data: member } = await supabase
+      .from('hg_members')
+      .select('id, organization_id')
+      .eq('auth_user_id', user.id)
       .single();
-    return profile?.organization_id;
+    return member;
   }
 
   async function loadInvoices() {
-    const orgId = await getOrgId();
-    if (!orgId) return;
+    const m = await getMembership();
+    if (!m) return;
 
     const { data } = await supabase
-      .from('invoices')
-      .select('*, projects(name)')
-      .eq('organization_id', orgId)
+      .from('hg_invoices')
+      .select('*, hg_projects(name)')
+      .eq('organization_id', m.organization_id)
       .order('created_at', { ascending: false });
 
     setInvoices(data ?? []);
   }
 
   async function loadProjects() {
-    const orgId = await getOrgId();
-    if (!orgId) return;
+    const m = await getMembership();
+    if (!m) return;
 
     const { data } = await supabase
-      .from('projects')
+      .from('hg_projects')
       .select('*')
-      .eq('organization_id', orgId)
+      .eq('organization_id', m.organization_id)
       .eq('is_active', true);
 
     setProjects(data ?? []);
@@ -60,14 +60,13 @@ export default function InvoicesPage() {
     e.preventDefault();
     setGenerating(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    const orgId = await getOrgId();
-    if (!user || !orgId) return;
+    const m = await getMembership();
+    if (!m) return;
 
     let query = supabase
-      .from('time_entries')
+      .from('hg_time_entries')
       .select('started_at, stopped_at')
-      .eq('organization_id', orgId)
+      .eq('organization_id', m.organization_id)
       .not('stopped_at', 'is', null)
       .gte('started_at', `${fromDate}T00:00:00`)
       .lte('started_at', `${toDate}T23:59:59`);
@@ -86,10 +85,10 @@ export default function InvoicesPage() {
     const rate = parseFloat(hourlyRate);
     const totalAmount = totalHours * rate;
 
-    await supabase.from('invoices').insert({
-      organization_id: orgId,
+    await supabase.from('hg_invoices').insert({
+      organization_id: m.organization_id,
       project_id: projectId || null,
-      created_by: user.id,
+      created_by: m.id,
       title: title || `Invoice ${fromDate} to ${toDate}`,
       from_date: fromDate,
       to_date: toDate,
@@ -111,13 +110,13 @@ export default function InvoicesPage() {
 
       <form onSubmit={generateInvoice} className="mb-8 rounded-lg border border-slate-800 bg-slate-900 p-6 space-y-4">
         <h2 className="font-semibold">Generate Invoice</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <input
             type="text"
             placeholder="Invoice title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="col-span-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
+            className="sm:col-span-2 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm"
           />
           <select
             value={projectId}
@@ -169,7 +168,7 @@ export default function InvoicesPage() {
             <div>
               <p className="font-medium">{inv.title}</p>
               <p className="text-xs text-slate-400">
-                {inv.from_date} — {inv.to_date} | {(inv as any).projects?.name ?? 'All projects'}
+                {inv.from_date} — {inv.to_date} | {(inv as any).hg_projects?.name ?? 'All projects'}
               </p>
             </div>
             <div className="text-right">
