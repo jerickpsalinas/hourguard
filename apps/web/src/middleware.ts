@@ -1,13 +1,16 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { cookieDomainForHost, sharedCookieOptions } from '@/lib/cookie-domain';
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
+  const domain = cookieDomainForHost(request.headers.get('host'));
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: sharedCookieOptions(domain),
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value;
