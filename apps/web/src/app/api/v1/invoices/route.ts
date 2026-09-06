@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateApiKey, paginate } from '../_lib/auth';
+import { serverError } from '../_lib/http';
 import { createServiceClient } from '@/lib/supabase-server';
 import { computeInvoiceTotals } from '@/lib/invoice';
 
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     .range(offset, offset + limit - 1);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('GET /invoices', error);
   }
 
   return NextResponse.json({ data, total: count, limit, offset });
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('POST /invoices', error);
   }
 
   return NextResponse.json({ data: invoice }, { status: 201 });

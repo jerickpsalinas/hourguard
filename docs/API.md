@@ -90,7 +90,13 @@ The invoice is attributed to an owner/manager of the org.
 ## Projects & Members
 
 ### `GET /projects`
-Lists the org's projects.
+Lists the org's projects (paginated).
 
 ### `GET /members`
-Lists the org's members.
+Lists the org's members (paginated).
+
+---
+
+Errors return a generic `{ "error": "Internal server error" }` (details are logged
+server-side, not returned). UUID query params (`member_id`, `project_id`) are
+validated and return `400` if malformed.

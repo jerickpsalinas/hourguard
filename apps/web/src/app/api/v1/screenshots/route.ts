@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateApiKey, paginate } from '../_lib/auth';
+import { isUuid, serverError, badRequest } from '../_lib/http';
 import { createServiceClient } from '@/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
@@ -19,14 +20,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'member_id, time_entry_id, storage_path, and captured_at are required' }, { status: 400 });
   }
 
-  // Screenshots live under `<organization_id>/<member_id>/...`. Reject any path
-  // outside the caller's org prefix — otherwise a key holder could register a row
-  // pointing at another org's file and read it via the GET-signed URL.
-  if (typeof storage_path !== 'string' || !storage_path.startsWith(`${auth.organizationId}/`)) {
-    return NextResponse.json(
-      { error: `storage_path must be within this organization (start with "${auth.organizationId}/")` },
-      { status: 400 }
-    );
+  // Screenshots live under `<organization_id>/<member_id>/...`. Bind the path to
+  // this org AND this member, and reject `..` segments, so a key holder can't
+  // register a row pointing at another org's/member's object and read it via the
+  // GET-signed URL.
+  if (
+    typeof storage_path !== 'string' ||
+    !storage_path.startsWith(`${auth.organizationId}/${member_id}/`) ||
+    storage_path.includes('..')
+  ) {
+    return badRequest(`storage_path must be within "${auth.organizationId}/${member_id}/"`);
   }
 
   const supabase = createServiceClient();
@@ -58,7 +61,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('POST /screenshots', error);
   }
 
   return NextResponse.json({ data }, { status: 201 });
@@ -72,6 +75,8 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const date = url.searchParams.get('date');
   const memberId = url.searchParams.get('member_id');
+
+  if (memberId && !isUuid(memberId)) return badRequest('member_id must be a UUID');
 
   const supabase = createServiceClient();
 
@@ -90,7 +95,7 @@ export async function GET(request: NextRequest) {
   const { data, count, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('GET /screenshots', error);
   }
 
   const withUrls = await Promise.all(

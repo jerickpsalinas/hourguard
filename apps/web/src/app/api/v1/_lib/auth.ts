@@ -39,7 +39,8 @@ export async function authenticateApiKey(
   void supabase
     .from('hg_api_keys')
     .update({ last_used_at: new Date().toISOString() })
-    .eq('id', apiKey.id);
+    .eq('id', apiKey.id)
+    .then(undefined, () => {}); // swallow — non-critical bookkeeping
 
   return {
     organizationId: apiKey.organization_id,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateApiKey, paginate } from '../_lib/auth';
+import { isUuid, serverError, badRequest } from '../_lib/http';
 import { createServiceClient } from '@/lib/supabase-server';
 
 export async function POST(request: NextRequest) {
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('POST /time-entries', error);
   }
 
   return NextResponse.json({ data }, { status: 201 });
@@ -64,6 +65,9 @@ export async function GET(request: NextRequest) {
   const to = url.searchParams.get('to');
   const memberId = url.searchParams.get('member_id');
   const projectId = url.searchParams.get('project_id');
+
+  if (memberId && !isUuid(memberId)) return badRequest('member_id must be a UUID');
+  if (projectId && !isUuid(projectId)) return badRequest('project_id must be a UUID');
 
   const supabase = createServiceClient();
 
@@ -82,7 +86,7 @@ export async function GET(request: NextRequest) {
   const { data, count, error } = await query;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return serverError('GET /time-entries', error);
   }
 
   return NextResponse.json({ data, total: count, limit, offset });
