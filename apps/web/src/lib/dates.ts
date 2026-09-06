@@ -14,11 +14,6 @@ export function localDateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-// Today's local date as "YYYY-MM-DD" (safe for <input type="date"> and range math).
-export function todayLocal(): string {
-  return localDateKey(new Date());
-}
-
 // Given a "YYYY-MM-DD" local date string, return the UTC ISO instants bounding
 // that full local day: [00:00:00.000, 23:59:59.999].
 export function localDayBounds(dateStr: string): { startISO: string; endISO: string } {

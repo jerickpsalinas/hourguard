@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { localDateKey, localDayBounds } from '@/lib/dates';
 import { summarizeEntries, sumSecondsByLocalDay, type RawEntry } from '@/lib/aggregate';
+import { formatHours } from '@/lib/format';
 import { EmptyState } from '@/components/empty-state';
 
 type DayBar = { label: string; hours: number };
@@ -98,7 +99,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { label: 'Total Hours Today', value: `${stats.totalHours}h`, href: '/dashboard/timesheets' },
+          { label: 'Total Hours Today', value: formatHours(stats.totalHours), href: '/dashboard/timesheets' },
           { label: 'Active Members', value: stats.members, href: isAdmin ? '/dashboard/members' : undefined },
           { label: 'Active Projects', value: stats.projects, href: '/dashboard/projects' },
         ].map((card) => {

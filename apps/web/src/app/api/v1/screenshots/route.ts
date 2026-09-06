@@ -31,25 +31,15 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceClient();
 
-  const { data: memberCheck } = await supabase
-    .from('hg_members')
-    .select('id')
-    .eq('id', member_id)
-    .eq('organization_id', auth.organizationId)
-    .single();
+  // Both existence checks are independent — run them together.
+  const [{ data: memberCheck }, { data: entryCheck }] = await Promise.all([
+    supabase.from('hg_members').select('id').eq('id', member_id).eq('organization_id', auth.organizationId).single(),
+    supabase.from('hg_time_entries').select('id').eq('id', time_entry_id).eq('organization_id', auth.organizationId).single(),
+  ]);
 
   if (!memberCheck) {
     return NextResponse.json({ error: 'Member not found in this organization' }, { status: 404 });
   }
-
-  // The referenced time entry must also belong to this org.
-  const { data: entryCheck } = await supabase
-    .from('hg_time_entries')
-    .select('id')
-    .eq('id', time_entry_id)
-    .eq('organization_id', auth.organizationId)
-    .single();
-
   if (!entryCheck) {
     return NextResponse.json({ error: 'time_entry_id not found in this organization' }, { status: 404 });
   }

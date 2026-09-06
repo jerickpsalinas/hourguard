@@ -34,7 +34,9 @@ export async function authenticateApiKey(
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
 
-  await supabase
+  // Fire-and-forget: last_used_at is non-critical bookkeeping and shouldn't add a
+  // serial write to the auth hot path.
+  void supabase
     .from('hg_api_keys')
     .update({ last_used_at: new Date().toISOString() })
     .eq('id', apiKey.id);

@@ -32,8 +32,6 @@ export default function Tracker({ onLogout }: { onLogout: () => void }) {
   const [activity, setActivity] = useState({ keyboard: 0, mouse: 0 });
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const tracking = state === 'tracking';
-
   useEffect(() => {
     window.api.getProjects().then(setProjects);
     window.api.getStatus().then((status) => {

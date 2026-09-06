@@ -20,27 +20,19 @@ export async function POST(request: NextRequest) {
 
   const supabase = createServiceClient();
 
-  const { data: memberCheck } = await supabase
-    .from('hg_members')
-    .select('id')
-    .eq('id', member_id)
-    .eq('organization_id', auth.organizationId)
-    .single();
+  // Member check, plus the optional project check, are independent — run together.
+  const [{ data: memberCheck }, projectResult] = await Promise.all([
+    supabase.from('hg_members').select('id').eq('id', member_id).eq('organization_id', auth.organizationId).single(),
+    project_id
+      ? supabase.from('hg_projects').select('id').eq('id', project_id).eq('organization_id', auth.organizationId).single()
+      : Promise.resolve({ data: { id: null } }),
+  ]);
 
   if (!memberCheck) {
     return NextResponse.json({ error: 'Member not found in this organization' }, { status: 404 });
   }
-
-  if (project_id) {
-    const { data: projectCheck } = await supabase
-      .from('hg_projects')
-      .select('id')
-      .eq('id', project_id)
-      .eq('organization_id', auth.organizationId)
-      .single();
-    if (!projectCheck) {
-      return NextResponse.json({ error: 'project_id not found in this organization' }, { status: 404 });
-    }
+  if (project_id && !projectResult.data) {
+    return NextResponse.json({ error: 'project_id not found in this organization' }, { status: 404 });
   }
 
   const { data, error } = await supabase

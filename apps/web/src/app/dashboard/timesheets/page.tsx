@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonTable } from '@/components/skeleton';
 import { toCsv, downloadCsv } from '@/lib/csv';
-import { formatDuration } from '@/lib/format';
+import { formatDuration, formatHours } from '@/lib/format';
 import { localDateKey, localRangeBounds } from '@/lib/dates';
 
 export default function TimesheetsPage() {
@@ -91,7 +91,7 @@ export default function TimesheetsPage() {
     },
     { seconds: 0, activitySum: 0, completed: 0 }
   );
-  const totalHoursStr = (totals.seconds / 3600).toFixed(1);
+  const totalHoursStr = formatHours(totals.seconds / 3600);
   const avgActivity = totals.completed > 0 ? Math.round(totals.activitySum / totals.completed) : 0;
 
   const inputClass = 'rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white focus:border-brand/50 focus:outline-none focus:ring-1 focus:ring-brand/50 transition-colors';
@@ -133,7 +133,7 @@ export default function TimesheetsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="glass-card p-4">
             <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Total Hours</p>
-            <p className="text-xl font-display font-bold">{totalHoursStr}h</p>
+            <p className="text-xl font-display font-bold">{totalHoursStr}</p>
           </div>
           <div className="glass-card p-4">
             <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Entries</p>

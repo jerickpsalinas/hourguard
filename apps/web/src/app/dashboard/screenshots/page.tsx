@@ -13,19 +13,20 @@ export default function ScreenshotsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [page, setPage] = useState(0);
   const [selectedDate, setSelectedDate] = useState(() => localDateKey(new Date()));
   const [expandedUrl, setExpandedUrl] = useState<string | null>(null);
   const supabase = createClient();
   const { member } = useAuth();
 
   const loadPage = useCallback(
-    async (page: number, append: boolean) => {
+    async (pageNum: number, append: boolean) => {
       if (!member) return;
       if (append) setLoadingMore(true);
       else setLoading(true);
 
       const { startISO, endISO } = localDayBounds(selectedDate);
-      const from = page * PAGE_SIZE;
+      const from = pageNum * PAGE_SIZE;
       const { data } = await supabase
         .from('hg_screenshots')
         .select('*, hg_members(full_name)')
@@ -35,17 +36,16 @@ export default function ScreenshotsPage() {
         .order('captured_at', { ascending: false })
         .range(from, from + PAGE_SIZE - 1);
 
-      const withUrls = await Promise.all(
-        (data ?? []).map(async (ss) => {
-          const { data: urlData } = await supabase.storage
-            .from('screenshots')
-            .createSignedUrl(ss.storage_path, 3600);
-          return { ...ss, url: urlData?.signedUrl, page };
-        })
-      );
+      // Sign all paths in one request rather than one round-trip per screenshot.
+      const rows = data ?? [];
+      const { data: signed } = await supabase.storage
+        .from('screenshots')
+        .createSignedUrls(rows.map((ss) => ss.storage_path), 3600);
+      const withUrls = rows.map((ss, i) => ({ ...ss, url: signed?.[i]?.signedUrl }));
 
       setScreenshots((prev) => (append ? [...prev, ...withUrls] : withUrls));
-      setHasMore((data?.length ?? 0) === PAGE_SIZE);
+      setHasMore(rows.length === PAGE_SIZE);
+      setPage(pageNum);
       setLoadingMore(false);
       setLoading(false);
     },
@@ -56,8 +56,6 @@ export default function ScreenshotsPage() {
     if (!member) return;
     loadPage(0, false);
   }, [member, selectedDate, loadPage]);
-
-  const currentPage = screenshots.length > 0 ? Math.max(...screenshots.map((s) => s.page ?? 0)) : 0;
 
   const closeModal = useCallback(() => setExpandedUrl(null), []);
 
@@ -130,7 +128,7 @@ export default function ScreenshotsPage() {
         {hasMore && (
           <div className="mt-6 text-center">
             <button
-              onClick={() => loadPage(currentPage + 1, true)}
+              onClick={() => loadPage(page + 1, true)}
               disabled={loadingMore}
               className="rounded-xl border border-white/10 bg-white/[0.06] px-5 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/[0.1] transition-colors disabled:opacity-50"
             >

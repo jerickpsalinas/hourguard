@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase-browser';
 import { useAuth } from '@/lib/auth-context';
 import { SkeletonRows } from '@/components/skeleton';
 import { localRangeBounds } from '@/lib/dates';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatHours } from '@/lib/format';
 import { computeInvoiceTotals } from '@/lib/invoice';
 import { EmptyState } from '@/components/empty-state';
 
@@ -105,7 +105,7 @@ export default function InvoicesPage() {
     setTitle('');
     setFormMessage({
       type: 'success',
-      text: `Invoice created — ${totalHours.toFixed(1)}h totaling ${formatCurrency(totalAmount)}.`,
+      text: `Invoice created — ${formatHours(totalHours)} totaling ${formatCurrency(totalAmount)}.`,
     });
     loadInvoices();
   }

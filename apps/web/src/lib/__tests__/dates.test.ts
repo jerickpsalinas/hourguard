@@ -1,17 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { localDateKey, todayLocal, localDayBounds, localRangeBounds } from '../dates';
+import { localDateKey, localDayBounds, localRangeBounds } from '../dates';
 
 describe('localDateKey', () => {
   it('formats a local date as zero-padded YYYY-MM-DD', () => {
     // Constructed from local components, so this is deterministic in any timezone.
     expect(localDateKey(new Date(2026, 0, 5, 12, 0, 0))).toBe('2026-01-05');
     expect(localDateKey(new Date(2026, 11, 31, 23, 30, 0))).toBe('2026-12-31');
-  });
-});
-
-describe('todayLocal', () => {
-  it('matches localDateKey(now)', () => {
-    expect(todayLocal()).toBe(localDateKey(new Date()));
   });
 });
 
