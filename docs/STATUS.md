@@ -29,6 +29,11 @@ Snapshot of what's done and what still needs a live environment. Keep this curre
   `invoice` totals, `api-key` hashing, API `paginate`, and `http` helpers.
 - GitHub Actions runs typecheck (web + desktop), tests, and both builds on push/PR.
 
+- Real-time "Currently Tracking" panel on dashboard (live pulsing indicator, member name, project, elapsed time)
+- Screenshot privacy/blur zones (draw-to-blur editor, canvas-rendered blur overlay on thumbnails + lightbox, saved to DB)
+- Slack integration (webhook-based notifications on time-entry start/stop, settings UI with test message + remove)
+- Weekly activity report emails via Resend (cron every Monday 9 AM UTC, per-org summary to admins: hours by member, top projects)
+
 ## Recently completed
 
 - **Public signup removed** — Hourguard is a paid product; accounts come only from
@@ -61,10 +66,10 @@ Snapshot of what's done and what still needs a live environment. Keep this curre
 ## Needs live environment
 
 1. **Run new migrations** — Execute these in the **hirejps-portal** SQL Editor:
-   - `supabase/migrations/003_invoice_created_by_nullable.sql`
-   - `supabase/migrations/004_sync_full_name_trigger.sql`
+   - `supabase/migrations/005_screenshot_blur_zones.sql`
+   - `supabase/migrations/006_integrations.sql`
 
-2. **Set `CRON_SECRET`** in Vercel env vars to activate the screenshot cleanup cron.
+2. **Set `RESEND_API_KEY`** in Vercel env vars to activate weekly activity report emails.
 
 3. **Desktop distribution** — code signing (Apple/Windows certs), build
    installers, host them, and wire the `/download` page links.

@@ -13,13 +13,83 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [newKeyName, setNewKeyName] = useState('');
   const [generatedKey, setGeneratedKey] = useState('');
+  const [slackUrl, setSlackUrl] = useState('');
+  const [slackSaved, setSlackSaved] = useState('');
+  const [slackActive, setSlackActive] = useState(false);
+  const [slackLoading, setSlackLoading] = useState(true);
   const supabase = createClient();
   const { member } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (member) loadApiKeys();
+    if (member) {
+      loadApiKeys();
+      loadSlackIntegration();
+    }
   }, [member]);
+
+  async function loadSlackIntegration() {
+    if (!member) return;
+    setSlackLoading(true);
+    const { data } = await supabase
+      .from('hg_integrations')
+      .select('*')
+      .eq('organization_id', member.organizationId)
+      .eq('type', 'slack_webhook')
+      .maybeSingle();
+    if (data) {
+      setSlackUrl(data.config?.webhook_url ?? '');
+      setSlackSaved(data.config?.webhook_url ?? '');
+      setSlackActive(data.is_active);
+    }
+    setSlackLoading(false);
+  }
+
+  async function saveSlackIntegration(e: React.FormEvent) {
+    e.preventDefault();
+    if (!member) return;
+    const { error } = await supabase
+      .from('hg_integrations')
+      .upsert({
+        organization_id: member.organizationId,
+        type: 'slack_webhook',
+        config: { webhook_url: slackUrl.trim() },
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'organization_id,type' });
+    if (error) return toast('Failed to save Slack integration.', 'error');
+    setSlackSaved(slackUrl.trim());
+    setSlackActive(true);
+    toast('Slack integration saved.');
+  }
+
+  async function testSlack() {
+    if (!slackSaved) return;
+    try {
+      await fetch(slackSaved, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: '✅ Hourguard is connected! You will receive tracking notifications here.' }),
+      });
+      toast('Test message sent to Slack.');
+    } catch {
+      toast('Failed to send test message.', 'error');
+    }
+  }
+
+  async function removeSlackIntegration() {
+    if (!member) return;
+    const { error } = await supabase
+      .from('hg_integrations')
+      .delete()
+      .eq('organization_id', member.organizationId)
+      .eq('type', 'slack_webhook');
+    if (error) return toast('Failed to remove integration.', 'error');
+    setSlackUrl('');
+    setSlackSaved('');
+    setSlackActive(false);
+    toast('Slack integration removed.');
+  }
 
   async function loadApiKeys() {
     if (!member) return;
@@ -126,6 +196,57 @@ export default function SettingsPage() {
             ))}
           </div>
         )}
+      </div>
+
+      <div>
+        <h2 className="text-lg font-display font-semibold mb-4">Integrations</h2>
+
+        <div className="glass-card p-5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-[#4A154B] flex items-center justify-center text-white text-sm font-bold">#</div>
+            <div>
+              <p className="font-medium">Slack Notifications</p>
+              <p className="text-xs text-white/50">Get notified when team members start/stop tracking</p>
+            </div>
+            {slackActive && slackSaved && (
+              <span className="ml-auto text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded-full">Connected</span>
+            )}
+          </div>
+
+          {slackLoading ? (
+            <div className="h-10 animate-pulse rounded-xl bg-white/[0.04]" />
+          ) : (
+            <>
+              <form onSubmit={saveSlackIntegration} className="flex gap-3 mb-3">
+                <input
+                  type="url"
+                  placeholder="https://hooks.slack.com/services/..."
+                  aria-label="Slack webhook URL"
+                  value={slackUrl}
+                  onChange={(e) => setSlackUrl(e.target.value)}
+                  className={inputClass}
+                />
+                <button type="submit" disabled={!slackUrl.trim()} className="btn-brand px-4 py-2.5 text-sm disabled:opacity-40">
+                  Save
+                </button>
+              </form>
+              {slackSaved && (
+                <div className="flex gap-2">
+                  <button onClick={testSlack} className="text-sm text-white/60 hover:text-white transition-colors">
+                    Send test message
+                  </button>
+                  <span className="text-white/20">|</span>
+                  <button onClick={removeSlackIntegration} className="text-sm text-red-400 hover:text-red-300 transition-colors">
+                    Remove
+                  </button>
+                </div>
+              )}
+              <p className="text-xs text-white/40 mt-3">
+                Create an Incoming Webhook in your Slack workspace and paste the URL above.
+              </p>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

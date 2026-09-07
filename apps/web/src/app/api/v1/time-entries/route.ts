@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { authenticateApiKey, paginate } from '../_lib/auth';
 import { isUuid, serverError, badRequest } from '../_lib/http';
 import { createServiceClient } from '@/lib/supabase-server';
+import { sendSlackNotification } from '@/lib/slack';
 
 export async function POST(request: NextRequest) {
   const auth = await authenticateApiKey(request);
@@ -50,6 +51,26 @@ export async function POST(request: NextRequest) {
 
   if (error) {
     return serverError('POST /time-entries', error);
+  }
+
+  // Best-effort Slack notification
+  const { data: slackIntegration } = await supabase
+    .from('hg_integrations')
+    .select('config')
+    .eq('organization_id', auth.organizationId)
+    .eq('type', 'slack_webhook')
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (slackIntegration?.config?.webhook_url) {
+    const { data: memberInfo } = await supabase
+      .from('hg_members')
+      .select('full_name')
+      .eq('id', member_id)
+      .single();
+    const name = memberInfo?.full_name ?? 'A team member';
+    const action = stopped_at ? 'stopped tracking' : 'started tracking';
+    sendSlackNotification(slackIntegration.config.webhook_url, `⏱️ ${name} ${action}`);
   }
 
   return NextResponse.json({ data }, { status: 201 });

@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/empty-state';
 
 type DayBar = { label: string; hours: number };
 type ProjectTotal = { name: string; hours: number };
+type ActiveTracker = { memberId: string; name: string; project: string; startedAt: string };
 
 export default function DashboardPage() {
   const supabase = createClient();
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState({ members: 0, projects: 0, totalHours: 0 });
   const [weekBars, setWeekBars] = useState<DayBar[]>([]);
   const [topProjects, setTopProjects] = useState<ProjectTotal[]>([]);
+  const [activeTrackers, setActiveTrackers] = useState<ActiveTracker[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function DashboardPage() {
     const weekStartISO = localDayBounds(localDateKey(weekAgo)).startISO;
 
     (async () => {
-      const [entriesResult, weekResult, membersResult, projectsResult] = await Promise.all([
+      const [entriesResult, weekResult, membersResult, projectsResult, activeResult] = await Promise.all([
         supabase
           .from('hg_time_entries')
           .select('member_id, started_at, stopped_at, activity_percent, hg_members(full_name), hg_projects(name)')
@@ -57,6 +59,12 @@ export default function DashboardPage() {
           .select('*', { count: 'exact', head: true })
           .eq('organization_id', orgId)
           .eq('is_active', true),
+        supabase
+          .from('hg_time_entries')
+          .select('member_id, started_at, hg_members(full_name), hg_projects(name)')
+          .eq('organization_id', orgId)
+          .is('stopped_at', null)
+          .order('started_at', { ascending: false }),
       ]);
 
       if (ignore) return;
@@ -79,6 +87,14 @@ export default function DashboardPage() {
         });
       }
 
+      setActiveTrackers(
+        (activeResult.data ?? []).map((e: any) => ({
+          memberId: e.member_id,
+          name: e.hg_members?.full_name ?? 'Unknown',
+          project: e.hg_projects?.name ?? 'No project',
+          startedAt: e.started_at,
+        }))
+      );
       setSummary(summary.members);
       setWeekBars(bars);
       setTopProjects(
@@ -126,6 +142,36 @@ export default function DashboardPage() {
           );
         })}
       </div>
+
+      {!loading && activeTrackers.length > 0 && (
+        <div className="glass-card p-5 mb-8 border-green-500/20">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+            </span>
+            <h2 className="text-sm font-display font-semibold">Currently Tracking ({activeTrackers.length})</h2>
+          </div>
+          <div className="grid gap-2">
+            {activeTrackers.map((t) => {
+              const elapsed = Math.max(0, Math.floor((Date.now() - new Date(t.startedAt).getTime()) / 1000));
+              const hrs = Math.floor(elapsed / 3600);
+              const mins = Math.floor((elapsed % 3600) / 60);
+              return (
+                <div key={t.memberId} className="flex items-center justify-between rounded-xl bg-white/[0.04] px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium">{t.name}</p>
+                    <p className="text-xs text-white/50">{t.project}</p>
+                  </div>
+                  <span className="text-xs text-green-400 font-mono">
+                    {hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* 7-day hours trend */}
