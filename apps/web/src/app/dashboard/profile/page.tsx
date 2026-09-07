@@ -23,18 +23,11 @@ export default function ProfilePage() {
 
     const name = fullName.trim();
 
-    // Update the Hourguard membership record...
     const { error: memberErr } = await supabase
       .from('hg_members')
       .update({ full_name: name })
       .eq('id', member.id)
       .eq('organization_id', member.organizationId);
-
-    // ...and the shared HireJPS identity row (best-effort, keeps products in sync).
-    await supabase
-      .from('portal_users')
-      .update({ full_name: name })
-      .eq('auth_user_id', member.authUserId);
 
     setSaving(false);
 

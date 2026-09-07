@@ -78,7 +78,8 @@ export interface Invoice {
   id: string;
   organization_id: string;
   project_id: string | null;
-  created_by: string;
+  created_by: string | null;
+  created_via: 'dashboard' | 'api';
   title: string;
   from_date: string;
   to_date: string;

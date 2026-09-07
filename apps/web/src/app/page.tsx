@@ -52,18 +52,17 @@ export default async function Home() {
   ];
 
   return (
-    <div className="min-h-screen">
-      {/* Nav */}
-      <header className="flex items-center justify-between px-6 py-5 max-w-6xl mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl btn-brand flex items-center justify-center">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+    <div className="min-h-screen flex flex-col">
+      <header className="hirejps-header">
+        <div className="hirejps-header-inner">
+          <div className="hirejps-header-left">
+            <img src="/official-logo.png" alt="HireJPS Logo" className="hirejps-logo" />
+            <span className="hirejps-header-org">Hourguard</span>
           </div>
-          <span className="font-display font-bold tracking-tight">Hourguard</span>
+          <div className="hirejps-header-right">
+            <Link href="/login" className="hirejps-header-link">Sign in</Link>
+          </div>
         </div>
-        <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">Sign in</Link>
       </header>
 
       {/* Hero */}
@@ -78,7 +77,7 @@ export default async function Home() {
           Hourguard tracks work hours, measures productivity, and turns time into invoices — automatically. No spreadsheets, no guesswork.
         </p>
         <div className="mt-8 flex items-center justify-center gap-3">
-          <Link href="/signup" className="btn-brand px-6 py-3 text-sm">Get started free</Link>
+          <a href="https://hirejps.com" className="btn-brand px-6 py-3 text-sm">Get Hourguard</a>
           <Link href="/login" className="rounded-xl border border-white/10 bg-white/[0.06] px-6 py-3 text-sm text-white/70 hover:text-white hover:bg-white/[0.1] transition-colors">
             Sign in
           </Link>
@@ -111,7 +110,7 @@ export default async function Home() {
           <h2 className="text-2xl font-display font-bold">Your time deserves a guard.</h2>
           <p className="mt-3 text-white/50">Start tracking in minutes. Invite your team and see the difference.</p>
           <div className="mt-6 flex items-center justify-center gap-3">
-            <Link href="/signup" className="btn-brand px-6 py-3 text-sm">Create your account</Link>
+            <a href="https://hirejps.com" className="btn-brand px-6 py-3 text-sm">Get Hourguard</a>
             <Link href="/download" className="rounded-xl border border-white/10 bg-white/[0.06] px-6 py-3 text-sm text-white/70 hover:text-white hover:bg-white/[0.1] transition-colors">
               Get the desktop app
             </Link>
@@ -119,8 +118,22 @@ export default async function Home() {
         </div>
       </section>
 
-      <footer className="border-t border-white/[0.08] px-6 py-8 text-center">
-        <p className="text-xs text-white/55 font-mono uppercase tracking-wider">// Hourguard — a HireJPS Store product</p>
+      <footer className="hirejps-footer mt-auto">
+        <div className="hirejps-footer-inner">
+          <div className="hirejps-footer-brand">
+            <img src="/official-logo.png" alt="HireJPS Logo" className="hirejps-logo" />
+            <span className="hirejps-footer-copy">&copy; 2026 HireJPS.com &middot; All Rights Reserved.</span>
+          </div>
+          <nav className="hirejps-footer-nav" aria-label="Legal">
+            <a href="https://hirejps.com/affiliate">Affiliate Program</a>
+            <span className="hirejps-dot">&bull;</span>
+            <a href="https://hirejps.com/terms">Terms of Service</a>
+            <span className="hirejps-dot">&bull;</span>
+            <a href="https://hirejps.com/privacy">Privacy Policy</a>
+            <span className="hirejps-dot">&bull;</span>
+            <a href="https://hirejps.com/refund">Refund Policy</a>
+          </nav>
+        </div>
       </footer>
     </div>
   );

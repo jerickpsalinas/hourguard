@@ -76,14 +76,34 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/login');
+    window.location.href = 'https://portal.hirejps.com';
   };
 
   const isActive = (href: string) =>
     href === '/dashboard' ? pathname === '/dashboard' : pathname.startsWith(href);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col min-h-screen">
+      <header className="hirejps-header">
+        <div className="hirejps-header-inner">
+          <div className="hirejps-header-left">
+            <img src="/official-logo.png" alt="HireJPS Logo" className="hirejps-logo" />
+            {orgName && <span className="hirejps-header-org">{orgName}</span>}
+          </div>
+          <div className="hirejps-header-right">
+            <a href="https://portal.hirejps.com" className="hirejps-header-link">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              Back to products
+            </a>
+            <button onClick={handleLogout} className="hirejps-logout-btn" title="Sign out">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="10" height="18" rx="1"/><path d="M13 12h8m0 0l-3-3m3 3l-3 3"/></svg>
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex flex-1">
       {mobileOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/60 lg:hidden"
@@ -155,15 +175,6 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               <p className="text-xs text-white/60 capitalize">{member.role}</p>
             </>
           )}
-          <button
-            onClick={handleLogout}
-            className="mt-3 flex items-center gap-2 text-sm text-white/60 hover:text-brand transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            Sign out
-          </button>
         </div>
       </aside>
 
@@ -182,6 +193,25 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-6 lg:p-8">{children}</main>
       </div>
+      </div>
+
+      <footer className="hirejps-footer">
+        <div className="hirejps-footer-inner">
+          <div className="hirejps-footer-brand">
+            <img src="/official-logo.png" alt="HireJPS Logo" className="hirejps-logo" />
+            <span className="hirejps-footer-copy">&copy; 2026 HireJPS.com &middot; All Rights Reserved.</span>
+          </div>
+          <nav className="hirejps-footer-nav" aria-label="Legal">
+            <a href="https://hirejps.com/affiliate">Affiliate Program</a>
+            <span className="hirejps-dot">&bull;</span>
+            <a href="https://hirejps.com/terms">Terms of Service</a>
+            <span className="hirejps-dot">&bull;</span>
+            <a href="https://hirejps.com/privacy">Privacy Policy</a>
+            <span className="hirejps-dot">&bull;</span>
+            <a href="https://hirejps.com/refund">Refund Policy</a>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }

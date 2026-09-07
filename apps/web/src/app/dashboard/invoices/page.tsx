@@ -85,6 +85,7 @@ export default function InvoicesPage() {
       organization_id: member.organizationId,
       project_id: projectId || null,
       created_by: member.id,
+      created_via: 'dashboard',
       title: title || `Invoice ${fromDate} to ${toDate}`,
       from_date: fromDate,
       to_date: toDate,

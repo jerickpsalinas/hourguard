@@ -56,11 +56,10 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
             {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-            <div className="flex items-center justify-between text-sm">
+            <div className="text-sm text-center">
               <button type="button" onClick={() => { setMode('forgot'); setError(''); }} className="text-white/60 hover:text-brand transition-colors">
                 Forgot password?
               </button>
-              <a href="/signup" className="text-brand hover:underline">Sign up</a>
             </div>
           </form>
         )}

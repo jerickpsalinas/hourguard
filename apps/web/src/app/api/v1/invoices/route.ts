@@ -54,32 +54,13 @@ export async function POST(request: NextRequest) {
     .lte('started_at', `${to_date}T23:59:59.999Z`);
   if (project_id) entriesQuery = entriesQuery.eq('project_id', project_id);
 
-  // These three reads are independent — run them together.
-  // hg_invoices.created_by is NOT NULL and references hg_members — an API key is
-  // not a member, so attribute the invoice to an owner/manager of the org.
-  const [creatorResult, projectResult, entriesResult] = await Promise.all([
-    supabase
-      .from('hg_members')
-      .select('id, role')
-      .eq('organization_id', auth.organizationId)
-      .in('role', ['owner', 'manager'])
-      .eq('is_active', true)
-      .order('role', { ascending: true }) // 'manager' < 'owner' alphabetically; either is acceptable
-      .limit(1)
-      .maybeSingle(),
+  const [projectResult, entriesResult] = await Promise.all([
     project_id
       ? supabase.from('hg_projects').select('id').eq('id', project_id).eq('organization_id', auth.organizationId).single()
       : Promise.resolve({ data: { id: null } }),
     entriesQuery,
   ]);
 
-  const creator = creatorResult.data;
-  if (!creator) {
-    return NextResponse.json(
-      { error: 'No owner or manager member found to attribute the invoice to' },
-      { status: 409 }
-    );
-  }
   if (project_id && !projectResult.data) {
     return NextResponse.json({ error: 'project_id not found in this organization' }, { status: 404 });
   }
@@ -91,7 +72,8 @@ export async function POST(request: NextRequest) {
     .insert({
       organization_id: auth.organizationId,
       project_id: project_id || null,
-      created_by: creator.id,
+      created_by: null,
+      created_via: 'api',
       title: title || `Invoice ${from_date} to ${to_date}`,
       from_date,
       to_date,
