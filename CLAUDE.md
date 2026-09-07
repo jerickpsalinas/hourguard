@@ -65,3 +65,13 @@ Run `supabase/migrations/002_hirejps_portal_adapted.sql` in the **hirejps-portal
 REST API at `/api/v1/*` secured with Bearer token (API keys generated in dashboard Settings).
 Endpoints: time-entries (GET/POST), screenshots (GET/POST), invoices (GET/POST), projects (GET), members (GET).
 POST routes validate that referenced records (member/project/time-entry) and storage paths belong to the caller's org. Full reference: `docs/API.md`.
+
+## Store Product Spec
+
+This app is a HireJPS Store product. Before making any changes to authentication, header/footer UI, or deployment config, read **`STORE_PRODUCT_SPEC.md`** in the `portal-dashboard` repo. It is the single source of truth for:
+- Cross-subdomain SSO (one login, no per-app signup)
+- Required header & footer markup, CSS, and design tokens
+- Multi-tenant data model conventions
+- Deployment and DNS conventions
+
+All rules in that spec override any conflicting patterns in this codebase.
